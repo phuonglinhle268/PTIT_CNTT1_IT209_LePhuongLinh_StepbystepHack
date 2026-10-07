@@ -491,11 +491,30 @@ ls -la ~/devops-hackathon/submission/
 
 # PHẦN 5: TẢI BÀI NỘP VỀ MÁY QUA BITVISE SFTP & CHECKLIST
 
-### Các bước tải bài về máy tính:
-1. Mở cửa sổ **Bitvise SFTP**.
-2. Ở khung bên phải (Remote), mở thư mục Home (`/home/lplinh-HNK24CNTT1/` hoặc `/root/`).
-3. Nhấp giữ chuột trái vào thư mục `devops-hackathon`, kéo thả sang khung bên trái (máy tính của bạn).
-4. Kiểm tra cấu trúc thư mục đã tải về máy đảm bảo đầy đủ:
+> ⚠️ **LƯU Ý:** Bitvise **KHÔNG tự động lưu**, bạn phải chủ động thao tác kéo thả chuột từ VPS về máy tính theo hướng dẫn sau.
+
+### Sơ đồ thao tác trên cửa sổ Bitvise SFTP:
+```text
+┌───────────────────────────────────────┬───────────────────────────────────────┐
+│     KHUNG BÊN TRÁI (Local files)      │     KHUNG BÊN PHẢI (Remote files)     │
+│       (MÁY TÍNH CỦA BẠN - WINDOWS)    │              (MÁY ẢO VPS LINUX)       │
+├───────────────────────────────────────┼───────────────────────────────────────┤
+│  📁 Desktop                           │                                       │
+│  📁 Downloads                         │  📁 devops-hackathon  ◄───[BÀI LÀM]   │
+│  📁 D:\DevOps - RA                    │      └── submission/                  │
+│                                       │                                       │
+│   [Bước 1: Chọn thư mục muốn lưu]     │   [Bước 2: KÉO TỪ PHẢI ──► THẢ SANG TRÁI]
+└───────────────────────────────────────┴───────────────────────────────────────┘
+```
+
+### Chi tiết 3 bước tải bài về máy tính:
+1. **Bước 1 (Khung bên trái - Máy tính):** Nhấp chuột chọn thư mục trên máy tính mà bạn muốn lưu bài (ví dụ: `Desktop` hoặc thư mục `D:\DevOps - RA`).
+2. **Bước 2 (Khung bên phải - VPS):** Tìm thư mục `devops-hackathon` (nằm trong `/home/lplinh-HNK24CNTT1/` hoặc `/root/`).
+   - **Cách 1 (Kéo thả):** Giữ chuột trái vào `devops-hackathon` ở khung phải ➡️ Kéo sang vùng trắng khung trái ➡️ Nhả chuột ra.
+   - **Cách 2 (Chuột phải):** Nhấp chuột phải vào `devops-hackathon` ở khung phải ➡️ Chọn **`Download`**.
+3. **Bước 3 (Kiểm tra):**
+   - Nhìn thanh tiến trình dưới đáy cửa sổ SFTP chạy đạt **100%**.
+   - Mở File Explorer trên máy tính Windows ra kiểm tra thấy thư mục `devops-hackathon` đã có đầy đủ cấu trúc:
 ```text
 devops-hackathon/
 ├── templates/
