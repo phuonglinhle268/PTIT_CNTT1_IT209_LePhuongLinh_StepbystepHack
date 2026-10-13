@@ -1,541 +1,556 @@
-# CẨM NANG TOÀN DIỆN: TRIỂN KHAI WEBSITE HTML/CSS VỚI NGINX TRÊN LINUX VPS
+# CẨM NANG TOÀN DIỆN: THỰC HÀNH DEVOPS HACKATHON
+## TRIỂN KHAI WEBSITE HTML VỚI NGINX & QUẢN LÝ MÃ NGUỒN QUA GIT TRÊN LINUX VPS
 
-> **Thông tin cấu hình thực hành:**
+> **BẢNG THÔNG TIN CẤU HÌNH THỰC HÀNH:**
 > - **Họ và tên:** Lê Phương Linh
 > - **Lớp:** HNK24CNTT1
-> - **Tài khoản Linux User:** `lplinh-HNK24CNTT1` *(nếu đề yêu cầu tạo)*
+> - **Tài khoản Linux User:** `lplinh-HNK24CNTT1`
 > - **Địa chỉ IP VPS:** `221.121.4.67`
 > - **Cổng kết nối SSH:** `22`
-> - **Mật khẩu khởi tạo mẫu:** `123456789`
+> - **Cổng dịch vụ Web Nginx (Custom Port):** `8085` *(hoặc cổng theo bạn chỉ định)*
+> - **Tên Repository GitHub:** `devops-hackathon-de001-lephuonglinh`
 
 ---
 
-# HƯỚNG DẪN CHI TIẾT SỬ DỤNG PHẦN MỀM BITVISE SSH CLIENT (CHO NGƯỜI MỚI BẮT ĐẦU)
+# PHẦN I: ĐỀ BÀI CHUẨN DEVOPS HACKATHON (ĐỀ SỐ 001)
 
-Bitvise SSH Client là công cụ đồ họa giúp bạn vừa gõ lệnh Linux (Terminal), vừa kéo thả file giữa máy tính và VPS (SFTP) một cách trực quan.
-
-### 1. Cách đăng nhập vào VPS qua Bitvise
-1. Khởi động phần mềm **Bitvise SSH Client** trên máy tính Windows.
-2. Tại tab **Login** (ở giữa màn hình), bạn điền chính xác:
-   - **Host:** `221.121.4.67`
-   - **Port:** `22`
-   - **Username:** `root` *(hoặc `lplinh-HNK24CNTT1` nếu đã tạo user)*
-   - **Initial method:** chọn `password`
-   - **Password:** nhập mật khẩu (ví dụ `123456789` hoặc mật khẩu root của VPS)
-   - Tích chọn ô vuông: `Store encrypted password in profile` *(để lần sau không cần gõ lại)*.
-3. Nhấp vào nút **`Log in`** ở góc dưới cùng bên trái.
-4. **Xử lý thông báo khóa Host Key:**
-   - Nếu xuất hiện bảng popup cảnh báo *Host Key Verification*, bạn nhấp nút **`Accept and Save`**.
-5. **Dấu hiệu đăng nhập thành công:**
-   - Dòng chữ dưới đáy phần mềm chuyển sang trạng thái: `Authentication completed. Session started.`
+### 1. Mục tiêu bài thi
+Đánh giá kỹ năng toàn diện về:
+- Quản trị hệ thống máy chủ Linux Ubuntu (Tạo user, phân quyền sudo, quản lý tiến trình).
+- Thiết lập bảo mật mạng với tường lửa **UFW**.
+- Cài đặt, viết file cấu hình Virtual Host và vận hành Web Server **Nginx**.
+- Quản trị mã nguồn chuyên nghiệp với **Git & GitHub** (tạo `.gitignore`, commit phân tách, push code).
+- Quy trình cập nhật website thời gian thực không gián đoạn dịch vụ (*zero-downtime update* bằng `git pull` trực tiếp trên máy chủ).
 
 ---
 
-### 2. Cách mở Terminal và SFTP trên Bitvise
-Nhìn vào thanh menu màu xám ở cột bên trái của Bitvise:
-- **Mở cửa sổ gõ lệnh Linux:** Nhấp chuột vào nút **`New terminal console`** (hoặc biểu tượng màn hình đen). Cửa sổ dòng lệnh màu đen sẽ hiện ra để bạn gõ các câu lệnh.
-- **Mở cửa sổ truyền nhận file (SFTP):** Nhấp chuột vào nút **`New SFTP window`** (hoặc biểu tượng 2 thư mục). 
+### 2. Thông số bài làm quy chuẩn
+- **Mã đề:** Đề 001 - *Quản lý phòng Lab*.
+- **Hệ điều hành máy chủ:** Ubuntu 22.04 / 24.04 LTS (VPS Cloud).
+- **Tài khoản Linux User:** `<tên_viết_liền_không_dấu>-<mã_lớp>` *(VD: `lplinh-HNK24CNTT1`)*.
+- **Tên Repo GitHub:** `devops-hackathon-de001-<họ_tên>` *(VD: `devops-hackathon-de001-lephuonglinh`)*.
+- **Cổng Nginx phục vụ website:** `8085` (hoặc cổng được chỉ định riêng).
+- **Đường dẫn Web Root trên máy chủ:** `/var/www/devops-hackathon-de001-<họ_tên>/src`.
 
 ---
 
-### 3. Hướng dẫn thao tác kéo thả File trên cửa sổ SFTP
-Khi cửa sổ SFTP mở ra, bạn sẽ thấy chia làm 2 nửa màn hình:
-- **Khung bên trái (Local files):** Là các ổ đĩa `C:`, `D:`, thư mục trên máy tính Windows cá nhân của bạn.
-- **Khung bên phải (Remote files):** Là các thư mục nằm trên máy chủ VPS Linux.
-
-**Thao tác Upload (Gửi file từ máy tính lên VPS):**
-1. Ở khung bên trái, nhấp đúp chuột tìm đến thư mục chứa bài làm `devops-hackathon` trên máy tính của bạn.
-2. Ở khung bên phải, đảm bảo đang ở thư mục Home của bạn (ví dụ `/root/` hoặc `/home/lplinh-HNK24CNTT1/`).
-3. Giữ chuột trái vào thư mục `devops-hackathon` ở bên trái, **kéo và thả sang khung bên phải**. Quá trình tải lên sẽ chạy trong vài giây.
-
-**Thao tác Download (Tải bài từ VPS về máy tính để nộp):**
-1. Ở khung bên phải (Remote), tìm thư mục `devops-hackathon`.
-2. Giữ chuột trái vào thư mục `devops-hackathon`, **kéo và thả sang khung bên trái** (về máy tính cá nhân).
-
----
-
-# GIAI ĐOẠN 0: XỬ LÝ KHI VỪA RESET / CÀI LẠI OS MÁY ẢO
-
-Nếu bạn vừa bấm **Reset / Cài lại OS** trên trang quản lý VPS, mã bảo mật SSH cũ trên máy tính của bạn sẽ bị lệch, khi SSH sẽ báo lỗi `Host key verification failed`.
-
-### Cách khắc phục:
-1. Mở **PowerShell** trên máy tính cá nhân (hoặc trong Bitvise bấm Logout rồi Login lại).
-2. Chạy lệnh xóa cache key cũ:
-   ```powershell
-   ssh-keygen -R 221.121.4.67
-   ```
-   *Kết quả thành công:* Hệ thống hiển thị:
-   `# Host 221.121.4.67 found: line ... updated / ... (key removed)`
-3. Kết nối lại bình thường bằng Bitvise hoặc lệnh:
-   ```powershell
-   ssh root@221.121.4.67
-   ```
-
----
-
-# PHẦN 1: QUẢN TRỊ LINUX & CÀI ĐẶT NGINX
-
-> 💡 **LỰA CHỌN THEO ĐỀ BÀI CỦA BẠN:**
-> - **TRƯỜNG HỢP A (Đề thi yêu cầu tạo User sinh viên `[tên]-[lớp]`):** Bắt buộc làm mục [1.1](#11-trường-hợp-a-tạo-user-sinh-viên-và-đăng-nhập-lại-nếu-đề-yêu-cầu).
-> - **TRƯỜNG HỢP B (Đề bài KHÔNG yêu cầu tạo User):** Bỏ qua mục 1.1, giữ nguyên tài khoản `root` và nhảy thẳng xuống [1.2. Cài đặt môi trường Nginx](#12-cài-đặt-nginx-nodejs-và-ufw-áp-dụng-cho-cả-2-trường-hợp).
-
----
-
-## 1.1. TRƯỜNG HỢP A: Tạo User sinh viên và đăng nhập lại (Nếu đề yêu cầu)
-
-### Bước 1: Tạo user mới trên Terminal (đang ở quyền `root`)
-Gõ lệnh sau và nhấn Enter:
-```bash
-adduser --shell /bin/bash lplinh-HNK24CNTT1
-```
-*Màn hình sẽ hiển thị các câu hỏi từng bước:*
-- `New password:` -> Gõ `123456789` rồi nhấn **Enter** *(Lưu ý: Linux sẽ ẩn mật khẩu, không hiện dấu sao, bạn cứ gõ bình thường)*.
-- `Retype new password:` -> Gõ lại `123456789` rồi nhấn **Enter**.
-- `Full Name []:` -> Nhấn **Enter** để bỏ qua.
-- `Room Number []:` -> Nhấn **Enter** để bỏ qua.
-- `Work Phone []:` -> Nhấn **Enter** để bỏ qua.
-- `Home Phone []:` -> Nhấn **Enter** để bỏ qua.
-- `Other []:` -> Nhấn **Enter** để bỏ qua.
-- `Is the information correct? [Y/n]` -> Gõ `Y` rồi nhấn **Enter**.
-
-### Bước 2: Cấp quyền quản trị `sudo` cho user mới
-```bash
-usermod -aG sudo lplinh-HNK24CNTT1
-```
-*Kết quả:* Lệnh chạy ngầm và trả về dấu nhắc lệnh mới, không báo lỗi.
-
-### Bước 3: Kiểm tra phân quyền user
-```bash
-id lplinh-HNK24CNTT1
-```
-*Kết quả xuất hiện trên màn hình:*
-`uid=1001(lplinh-HNK24CNTT1) gid=1001(lplinh-HNK24CNTT1) groups=1001(lplinh-HNK24CNTT1),27(sudo)`
-
-### Bước 4: Thoát Root và Đăng nhập lại bằng User mới
-Gõ lệnh thoát:
-```bash
-exit
-```
-- Mở Bitvise: Đổi **Username** thành `lplinh-HNK24CNTT1`, nhập mật khẩu `123456789` rồi bấm **Log in** và mở lại **New terminal console**.
-- Hoặc từ PowerShell gõ:
-```powershell
-ssh lplinh-HNK24CNTT1@221.121.4.67
-```
-
----
-
-## 1.2. Cài đặt Nginx, Node.js và UFW (Áp dụng cho cả 2 trường hợp)
-
-*(Nếu bạn đang ở quyền `root`, các lệnh có thể bỏ chữ `sudo`; nếu ở user sinh viên thì giữ nguyên `sudo`)*
-
-### Bước 1: Cập nhật danh sách phần mềm hệ thống
-```bash
-sudo apt update && sudo apt upgrade -y
-```
-*Kết quả:* Hệ thống tải danh sách gói, hiển thị `Reading package lists... Done` và `All packages are up to date`.
-
-### Bước 2: Cài đặt Web Server Nginx và các tiện ích cần thiết
-```bash
-sudo apt install -y nginx ufw curl unzip
-```
-*Kết quả:* Nginx và UFW được cài đặt, kết thúc bằng dòng `Setting up nginx ...`
-
-### Bước 3: Cài đặt Node.js và npm (để chạy công cụ kiểm tra tự động)
-```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
-```
-
-### Bước 4: Kiểm tra phiên bản các công cụ đã cài đặt
-```bash
-nginx -v
-node --version
-npm --version
-ufw --version
-```
-*Kết quả hiển thị tương tự:*
+### 3. Cấu trúc thư mục dự án quy chuẩn
 ```text
-nginx version: nginx/1.18.0 (Ubuntu)
-v20.18.0
-10.8.2
-ufw 0.36.2
+devops-hackathon-de001-lephuonglinh/
+├── .gitignore                      <-- File loại trừ tệp rác (commit đầu tiên)
+├── src/
+│   └── index.html                  <-- Trang web tĩnh chứa thông tin sinh viên & đề thi
+├── nginx/
+│   └── lplinh-HNK24CNTT1.conf      <-- File cấu hình Virtual Host Nginx độc lập
+└── screenshots/                    <-- Thư mục chứa 6 ảnh minh chứng thực nghiệm
+    ├── 01-user.png
+    ├── 02-nginx.png
+    ├── 03-ufw.png
+    ├── 04-website.png
+    ├── 05-git-log.png
+    └── 06-update.png
 ```
 
 ---
 
-## 1.3. Cấu hình Tường lửa (Firewall UFW)
+### 4. Tiêu chí đánh giá & Bảng điểm (Thang điểm 10)
 
-### Bước 1: Thiết lập chính sách bảo mật
-```bash
-# 1. Chặn toàn bộ kết nối đến mặc định
-sudo ufw default deny incoming
+| STT | Tiêu chí đánh giá | Yêu cầu kỹ thuật | Điểm |
+| :---: | :--- | :--- | :---: |
+| **1** | **Khởi tạo Git & `.gitignore`** | Repo sạch, commit đầu tiên có file `.gitignore` loại trừ IDE, OS, Log | 1.0 |
+| **2** | **Quản trị Linux User** | Tạo đúng user `lplinh-HNK24CNTT1`, cấp sudo, chạy lệnh qua user này | 1.0 |
+| **3** | **Cài đặt & Cấu hình Nginx** | File config riêng trong `nginx/`, port 8085, tách file log riêng, symlink chuẩn | 2.5 |
+| **4** | **Bảo mật Tường lửa UFW** | Kích hoạt UFW, mở đúng port 22 và port 8085, chặn các truy cập khác | 1.5 |
+| **5** | **Giao diện Website HTML** | Hiển thị đầy đủ thông tin cá nhân, đề thi, bảng biểu rõ ràng | 1.5 |
+| **6** | **Quy trình Git Workflow** | Clone về `/var/www/`, cập nhật nội dung lần 2 bằng `git pull` không cần restart Nginx | 1.0 |
+| **7** | **Minh chứng Screenshots** | Đầy đủ 6 ảnh minh chứng từ `01-user.png` đến `06-update.png` | 1.5 |
+| **TỔNG** | | | **10.0** |
 
-# 2. Cho phép kết nối đi ra ngoài
-sudo ufw default allow outgoing
+---
 
-# 3. Mở cổng SSH 22 (Bắt buộc để không bị mất kết nối)
-sudo ufw allow 22/tcp
-```
-*Kết quả mỗi lệnh:* Hệ thống báo `Rules updated`.
+# PHẦN II: HƯỚNG DẪN CHI TIẾT CÁCH LÀM TỪNG BƯỚC (A - Z)
 
-### Bước 2: Kích hoạt Firewall
-```bash
-sudo ufw enable
-```
-*Terminal hỏi:* `Command may disrupt existing ssh connections. Proceed with operation (y|n)?`
--> Bạn gõ `y` rồi nhấn **Enter**.
-*Kết quả:* `Firewall is active and enabled on system startup`.
+---
 
-### Bước 3: Kiểm tra trạng thái Firewall
-```bash
-sudo ufw status numbered
-```
-*Kết quả bảng tường lửa chuẩn:*
-```text
-Status: active
+## BƯỚC 1: KHỞI TẠO DỰ ÁN TRÊN INTELLIJ IDEA & GITHUB
 
-     To                         Action      From
-     --                         ------      ----
-[ 1] 22/tcp                     ALLOW IN    Anywhere
-[ 2] 22/tcp (v6)                ALLOW IN    Anywhere (v6)
+### 1.1. Tạo mới Project trên IntelliJ IDEA
+1. Mở phần mềm **IntelliJ IDEA**.
+2. Chọn **New Project** (hoặc `File` -> `New` -> `Project`).
+3. Điền các thông tin:
+   - **Name:** `devops-hackathon-de001-lephuonglinh`
+   - **Location:** Chọn thư mục lưu trữ trên máy tính của bạn (VD: `D:\DevOps - RA\devops-hackathon-de001-lephuonglinh`).
+   - Loại dự án: Chọn **Empty Project** (hoặc **Static Web / HTML**).
+   - Bấm **Create**.
+
+---
+
+### 1.2. Tạo file `.gitignore` (Bắt buộc cho dự án dùng IntelliJ)
+Vì bạn dùng IntelliJ IDEA, phần mềm sẽ tự tạo thư mục `.idea/` và các file `*.iml`. File `.gitignore` sẽ đảm bảo các file này không bị đẩy lên GitHub.
+
+1. Tại cửa sổ Project bên trái trong IntelliJ, nhấp chuột phải vào thư mục gốc dự án -> chọn **New** -> **File** -> đặt tên là: `.gitignore`
+2. Dán nội dung chuẩn sau vào file:
+```gitignore
+# Nhật ký hệ thống (Log files)
+*.log
+
+# Tệp tin do hệ điều hành tự sinh
+.DS_Store
+Thumbs.db
+
+# Cấu hình IDE (IntelliJ IDEA & VS Code)
+.idea/
+*.iml
+.vscode/
+
+# Tệp tin tạm thời khi soạn thảo
+*.tmp
+*.swp
 ```
 
 ---
 
-# PHẦN 2: TRIỂN KHAI WEBSITE HTML VỚI NGINX
-
-## 2.1. Upload mã nguồn & Chạy kiểm tra ban đầu
-
-1. Dùng **Bitvise SFTP** kéo thả toàn bộ thư mục `devops-hackathon` vào thư mục Home trên VPS.
-2. Trên Terminal, di chuyển vào thư mục dự án và chạy file kiểm tra môi trường:
+### 1.3. Khởi tạo Git cục bộ & Commit lần 1 (`Thêm .gitignore`)
+Mở cửa sổ **Terminal** ngay bên dưới của IntelliJ IDEA (phím tắt `Alt + F12`) và chạy các lệnh:
 ```bash
-cd ~/devops-hackathon
-node environment-check.js
+git init
+git add .gitignore
+git commit -m "Thêm .gitignore"
 ```
-*Kết quả:* Xuất hiện danh sách các mục kiểm tra tích xanh `[PASS]` cho Node, Nginx, UFW.
 
 ---
 
-## 2.2. KỊCH BẢN 1: Triển khai 1 Trang Web tĩnh Đơn Lẻ (Single Site)
+### 1.4. Tạo trang Web tĩnh `src/index.html`
+1. Chuột phải vào thư mục gốc dự án -> **New** -> **Directory** -> đặt tên là `src`.
+2. Chuột phải vào thư mục `src` vừa tạo -> **New** -> **HTML File** (hoặc **File**) -> đặt tên là `index.html`.
+3. Dán đoạn mã HTML sau (đã định dạng thẩm mỹ, chứa đầy đủ bảng thông tin cá nhân và đề thi):
 
-*Giả sử đề yêu cầu: Phục vụ website tại thư mục `/var/www/task-app` trên cổng `8090`.*
-
-### Bước 1: Tạo thư mục Web và tạo file `index.html`
-```bash
-sudo mkdir -p /var/www/task-app
-sudo nano /var/www/task-app/index.html
-```
-> **Mẹo dùng `nano` trên Terminal:**
-> - Sau khi gõ lệnh trên, màn hình soạn thảo mở ra.
-> - Copy toàn bộ đoạn HTML bên dưới -> Click chuột phải vào màn hình terminal để Dán (Paste).
-> - Nhấn tổ hợp phím **`Ctrl + O`** -> nhấn **`Enter`** (để Lưu file).
-> - Nhấn tổ hợp phím **`Ctrl + X`** (để Thoát ra ngoài).
-
-**Nội dung file `index.html`:**
 ```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTIT DevOps Task Management</title>
+    <title>DevOps Hackathon - Đề 001 - Lê Phương Linh</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; }
-        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
-        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        p { font-size: 16px; color: #333; line-height: 1.6; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 30px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        h1 {
+            color: #1a73e8;
+            font-size: 24px;
+            border-bottom: 2px solid #e8eaed;
+            padding-bottom: 12px;
+        }
+        h2 {
+            color: #202124;
+            font-size: 18px;
+            margin-top: 25px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #dadce0;
+            padding: 10px 14px;
+            text-align: left;
+        }
+        td:first-child {
+            font-weight: 600;
+            width: 35%;
+            background-color: #f8f9fa;
+        }
+        .intro-box {
+            background-color: #e8f0fe;
+            border-left: 4px solid #1a73e8;
+            padding: 15px;
+            border-radius: 4px;
+            line-height: 1.6;
+        }
+        .footer {
+            margin-top: 25px;
+            font-size: 13px;
+            color: #5f6368;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>PTIT DevOps Task Management</h1>
-        <p><strong>Họ và tên:</strong> Lê Phương Linh</p>
-        <p><strong>Mã sinh viên:</strong> HNK24CNTT1</p>
-        <p><strong>Lớp:</strong> HNK24CNTT1</p>
-        <p><strong>Trạng thái:</strong> Website HTML chạy hoàn hảo trên Nginx</p>
+    <div class="container">
+        <h1>Xin chào đến với Ptit Rikkei Devops Lab - Lê Phương Linh - HNK24CNTT1</h1>
+
+        <h2>Thông tin sinh viên</h2>
+        <table>
+            <tr><td>Họ và tên</td><td>Lê Phương Linh</td></tr>
+            <tr><td>Mã sinh viên / Lớp</td><td>HNK24CNTT1</td></tr>
+            <tr><td>Tài khoản Linux</td><td>lplinh-HNK24CNTT1</td></tr>
+            <tr><td>GitHub Profile</td><td><a href="https://github.com/lephuonglinh" target="_blank">lephuonglinh</a></td></tr>
+        </table>
+
+        <h2>Thông tin bài thi</h2>
+        <table>
+            <tr><td>Đề số</td><td>001</td></tr>
+            <tr><td>Chủ đề</td><td>Quản lý phòng Lab</td></tr>
+            <tr><td>Cổng Nginx (Port)</td><td>8085</td></tr>
+            <tr><td>Địa chỉ IP máy chủ</td><td>221.121.4.67</td></tr>
+            <tr><td>Repository</td><td>devops-hackathon-de001-lephuonglinh</td></tr>
+        </table>
+
+        <h2>Giới thiệu hệ thống</h2>
+        <div class="intro-box">
+            Hệ thống Quản lý phòng Lab phục vụ việc đăng ký và quản lý thiết bị thực hành tại các phòng máy. Sinh viên và giảng viên có thể theo dõi lịch biểu, trạng thái máy trạm và tài nguyên thực hành theo thời gian thực.
+        </div>
+
+        <div class="footer">
+            Phiên bản khởi tạo ban đầu
+        </div>
     </div>
 </body>
 </html>
 ```
 
-### Bước 2: Phân quyền thư mục Web cho user `www-data` (Cực kỳ quan trọng)
+4. Tiến hành commit lần 2 trên Terminal của IntelliJ:
 ```bash
-sudo chown -R www-data:www-data /var/www/task-app
-sudo chmod -R 755 /var/www/task-app
+git add src/index.html
+git commit -m "Thêm index.html"
 ```
-*Kết quả:* Không có lỗi xuất hiện. Kiểm tra bằng lệnh: `ls -ld /var/www/task-app` sẽ thấy chủ sở hữu là `www-data www-data`.
-
-### Bước 3: Tạo file cấu hình Virtual Host Nginx
-```bash
-sudo nano /etc/nginx/sites-available/lplinh-HNK24CNTT1-task.conf
-```
-*(Nếu đề không yêu cầu đặt tên theo user, bạn có thể đặt `task-app.conf`)*
-
-Dán nội dung cấu hình sau:
-```nginx
-server {
-    listen 8090;
-    server_name _;
-
-    root /var/www/task-app;
-    index index.html index.htm;
-
-    location / {
-        try_files $uri $uri/ =404;
-    }
-}
-```
-*(Bấm `Ctrl + O` -> `Enter` để lưu, `Ctrl + X` để thoát)*
 
 ---
 
-## 2.3. KỊCH BẢN 2: Triển khai Nhiều Website / Nhiều Trang (Multi-Site)
+### 1.5. Tạo file cấu hình Nginx `nginx/lplinh-HNK24CNTT1.conf`
+1. Chuột phải vào thư mục gốc dự án -> **New** -> **Directory** -> đặt tên là `nginx`.
+2. Chuột phải vào thư mục `nginx` -> **New** -> **File** -> đặt tên là `lplinh-HNK24CNTT1.conf`.
+3. Dán nội dung cấu hình Virtual Host Nginx sau:
 
-Nếu đề bài yêu cầu chạy từ 2 website trở lên, bạn có 2 phương án tùy theo yêu cầu cụ thể của đề:
-
----
-
-### 🔹 PHƯƠNG ÁN A: Chạy nhiều trang trên các CỔNG KHÁC NHAU (Multi-Port)
-*Ví dụ: Trang 1 ở cổng `8090`, Trang 2 (Dashboard) ở cổng `8091`.*
-
-#### Bước 1: Tạo thư mục và nội dung cho trang thứ 2
-```bash
-sudo mkdir -p /var/www/dashboard-app
-sudo nano /var/www/dashboard-app/index.html
-```
-Nội dung file `index.html` của trang 2:
-```html
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Trang Dashboard - Lê Phương Linh</title>
-</head>
-<body>
-    <h1>Trang Quản Trị Hệ Thống (Dashboard)</h1>
-    <p>Sinh viên thực hiện: Lê Phương Linh - Lớp: HNK24CNTT1</p>
-    <p>Trang này đang phục vụ độc lập tại cổng <strong>8091</strong>.</p>
-</body>
-</html>
-```
-
-#### Bước 2: Phân quyền cho trang thứ 2
-```bash
-sudo chown -R www-data:www-data /var/www/dashboard-app
-sudo chmod -R 755 /var/www/dashboard-app
-```
-
-#### Bước 3: Tạo file cấu hình Nginx riêng cho trang thứ 2
-```bash
-sudo nano /etc/nginx/sites-available/lplinh-HNK24CNTT1-dashboard.conf
-```
-Nội dung cấu hình:
 ```nginx
+# File cấu hình Nginx cho DevOps Hackathon - Đề 001 - Le Phuong Linh
 server {
-    listen 8091;
-    server_name _;
+    listen       8085;
+    listen       [::]:8085;
 
-    root /var/www/dashboard-app;
-    index index.html index.htm;
+    server_name  221.121.4.67;
+
+    # Trỏ đến thư mục src của dự án được clone trên VPS
+    root         /var/www/devops-hackathon-de001-lephuonglinh/src;
+    index        index.html;
+
+    # Tách file log riêng biệt theo tên sinh viên
+    access_log   /var/log/nginx/lplinh-HNK24CNTT1.access.log;
+    error_log    /var/log/nginx/lplinh-HNK24CNTT1.error.log;
 
     location / {
+        allow all;
         try_files $uri $uri/ =404;
     }
 }
 ```
 
----
-
-### 🔹 PHƯƠNG ÁN B: Chạy nhiều trang theo ĐƯỜNG DẪN CON (Subpath bằng `alias`)
-*Ví dụ: Cùng chạy trên cổng `8090`:*
-- `http://221.121.4.67:8090/` -> Mở trang chính tại `/var/www/task-app`
-- `http://221.121.4.67:8090/dashboard/` -> Mở trang phụ tại `/var/www/dashboard-app`
-
-Chỉnh sửa file cấu hình chính:
+4. Tiến hành commit lần 3:
 ```bash
-sudo nano /etc/nginx/sites-available/lplinh-HNK24CNTT1-task.conf
-```
-Cấu hình như sau (sử dụng directive `alias`):
-```nginx
-server {
-    listen 8090;
-    server_name _;
-
-    # 1. Trang chính ở đường dẫn gốc /
-    location / {
-        root /var/www/task-app;
-        index index.html index.htm;
-        try_files $uri $uri/ =404;
-    }
-
-    # 2. Trang phụ ở đường dẫn /dashboard/ (Lưu ý dấu / ở cuối)
-    location /dashboard/ {
-        alias /var/www/dashboard-app/;
-        index index.html index.htm;
-        try_files $uri $uri/ =404;
-    }
-}
+git add nginx/lplinh-HNK24CNTT1.conf
+git commit -m "Thêm file cấu hình nginx"
 ```
 
 ---
 
-# PHẦN 3: KÍCH HOẠT, KIỂM TRA & MỞ CỔNG FIREWALL
+### 1.6. Tạo thư mục `screenshots/`
+Chuột phải vào thư mục gốc dự án -> **New** -> **Directory** -> đặt tên là `screenshots`.
+*(Thư mục này sẽ dùng để lưu 6 ảnh chụp màn hình trong quá trình làm bài).*
 
-## 3.1. Kích hoạt Virtual Host Nginx
+---
 
-Tạo liên kết tượng trưng (Symlink) từ `sites-available` sang `sites-enabled`:
+### 1.7. Đẩy mã nguồn lên GitHub
+1. Mở trình duyệt web, đăng nhập vào GitHub của bạn và bấm **New Repository**.
+2. Đặt tên repository: `devops-hackathon-de001-lephuonglinh`
+   - Chọn chế độ: **Public**.
+   - **LƯU Ý:** Không tích chọn *Add a README file*, *Add .gitignore* (vì máy tính đã có rồi).
+   - Nhấn **Create repository**.
+3. Copy link git của repo vừa tạo (dạng: `https://github.com/<username-cua-ban>/devops-hackathon-de001-lephuonglinh.git`).
+4. Quay lại Terminal trên IntelliJ IDEA và chạy lệnh push:
 ```bash
-# Kích hoạt site chính
-sudo ln -s /etc/nginx/sites-available/lplinh-HNK24CNTT1-task.conf /etc/nginx/sites-enabled/
-
-# Kích hoạt site thứ 2 (nếu bạn làm theo Phương án A - Cổng 8091)
-sudo ln -s /etc/nginx/sites-available/lplinh-HNK24CNTT1-dashboard.conf /etc/nginx/sites-enabled/
+git branch -M main
+git remote add origin https://github.com/<username-cua-ban>/devops-hackathon-de001-lephuonglinh.git
+git push -u origin main
 ```
 
-## 3.2. Kiểm tra cú pháp cấu hình Nginx (Bắt buộc)
+---
+
+## BƯỚC 2: KẾT NỐI VÀ QUẢN TRỊ LINUX TRÊN VPS
+
+### 2.1. Đăng nhập vào VPS qua SSH (hoặc Bitvise)
+Mở PowerShell (hoặc Terminal trên máy tính):
+```powershell
+ssh root@221.121.4.67
+```
+*(Nhập mật khẩu VPS được cấp để đăng nhập).*
+
+> ⚠️ **Nếu gặp lỗi `Host key verification failed` (khi VPS vừa được reset lại OS):**
+> Chạy lệnh sau trên máy tính để xóa khóa cũ rồi đăng nhập lại:
+> ```powershell
+> ssh-keygen -R 221.121.4.67
+> ```
+
+---
+
+### 2.2. Tạo tài khoản User sinh viên `lplinh-HNK24CNTT1` & Cấp quyền Sudo
+Khi đang ở quyền `root` trên VPS, gõ:
 ```bash
+# 1. Tạo user mới có thư mục home và shell bash
+sudo useradd -m -s /bin/bash lplinh-HNK24CNTT1
+
+# 2. Đặt mật khẩu cho user mới (Nhập ví dụ: 123456789)
+sudo passwd lplinh-HNK24CNTT1
+
+# 3. Cấp quyền sudo quản trị cho user
+sudo usermod -aG sudo lplinh-HNK24CNTT1
+```
+
+---
+
+### 2.3. Chuyển sang User mới & Kiểm tra phân quyền
+```bash
+# Chuyển sang user sinh viên
+su - lplinh-HNK24CNTT1
+
+# Kiểm tra phân quyền
+id lplinh-HNK24CNTT1
+```
+*Kết quả hiển thị trên màn hình tương tự:*
+`uid=1001(lplinh-HNK24CNTT1) gid=1001(lplinh-HNK24CNTT1) groups=1001(lplinh-HNK24CNTT1),27(sudo)`
+
+📸 **CHỤP ẢNH MINH CHỨNG SỐ 1:**
+Chụp lại màn hình terminal chứa lệnh `id` và dấu nhắc lệnh `lplinh-HNK24CNTT1@...` -> Lưu tên file là: **`01-user.png`**.
+
+---
+
+### 2.4. Cài đặt các gói phần mềm cần thiết
+Chạy lệnh cài đặt Nginx, Git, UFW và Curl:
+```bash
+sudo apt update -y
+sudo apt install -y nginx git ufw curl
+sudo systemctl enable --now nginx
+```
+
+---
+
+### 2.5. Cấu hình thông tin Git cá nhân trên VPS
+```bash
+git config --global user.name "Le Phuong Linh"
+git config --global user.email "linhlp@ptit.edu.vn"
+```
+
+---
+
+## BƯỚC 3: DEPLOY MÃ NGUỒN TỪ GITHUB VÀO `/var/www/`
+
+### 3.1. Clone mã nguồn từ GitHub về thư mục Web
+Thực hiện lệnh clone trực tiếp vào thư mục `/var/www/`:
+```bash
+sudo git clone https://github.com/<username-cua-ban>/devops-hackathon-de001-lephuonglinh.git /var/www/devops-hackathon-de001-lephuonglinh
+```
+
+### 3.2. Phân quyền sở hữu và cấp quyền truy cập chuẩn
+```bash
+# Gán quyền sở hữu thư mục dự án cho user sinh viên
+sudo chown -R lplinh-HNK24CNTT1:lplinh-HNK24CNTT1 /var/www/devops-hackathon-de001-lephuonglinh
+
+# Cấp quyền 755 cho thư mục (cho phép Nginx www-data đọc và truy cập)
+find /var/www/devops-hackathon-de001-lephuonglinh -type d -exec chmod 755 {} \;
+
+# Cấp quyền 644 cho file
+find /var/www/devops-hackathon-de001-lephuonglinh -type f -exec chmod 644 {} \;
+```
+
+---
+
+## BƯỚC 4: KÍCH HOẠT VÀ VẬN HÀNH NGINX VIRTUAL HOST
+
+### 4.1. Kích hoạt Virtual Host Nginx
+Tạo liên kết cấu hình từ dự án vào hệ thống Nginx:
+```bash
+# Copy hoặc symlink file cấu hình vào sites-available
+sudo cp /var/www/devops-hackathon-de001-lephuonglinh/nginx/lplinh-HNK24CNTT1.conf /etc/nginx/sites-available/
+
+# Tạo liên kết tượng trưng (symlink) sang sites-enabled
+sudo ln -s /etc/nginx/sites-available/lplinh-HNK24CNTT1.conf /etc/nginx/sites-enabled/
+
+# Gỡ bỏ trang mặc định của Nginx để tránh xung đột
+sudo rm -f /etc/nginx/sites-enabled/default
+```
+
+### 4.2. Kiểm tra cú pháp và tải lại Nginx
+```bash
+# 1. Kiểm tra tính hợp lệ của cấu hình
 sudo nginx -t
-```
-*Kết quả đạt chuẩn tuyệt đối:*
-```text
-nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
-nginx: configuration file /etc/nginx/nginx.conf test is successful
-```
-> ⚠️ *Nếu báo lỗi dòng nào, bạn mở lại file `.conf` kiểm tra xem có quên dấu chấm phẩy `;` hoặc sai đường dẫn không.*
 
----
-
-## 3.3. Mở cổng Firewall & Nạp lại cấu hình Nginx
-
-### Bước 1: Mở cổng web trên UFW
-```bash
-# Mở cổng 8090
-sudo ufw allow 8090/tcp
-
-# Mở cổng 8091 (nếu có dùng thêm cổng 8091)
-sudo ufw allow 8091/tcp
-```
-*Kết quả:* `Rules updated`.
-
-### Bước 2: Nạp lại cấu hình Nginx
-```bash
+# 2. Reload Nginx để áp dụng cấu hình mới
 sudo systemctl reload nginx
-```
-*Kết quả:* Lệnh chạy xong ngay lập tức và không có lỗi.
 
-### Bước 3: Kiểm tra trạng thái dịch vụ Nginx
-```bash
+# 3. Xem trạng thái dịch vụ Nginx
 sudo systemctl status nginx
 ```
-*Kết quả:* Nhìn thấy chữ màu xanh lá cây: **`Active: active (running)`**. Nhấn **`q`** để thoát.
+*Kết quả:* Hệ thống báo `syntax is ok` và trạng thái `Active: active (running)`.
+
+📸 **CHỤP ẢNH MINH CHỨNG SỐ 2:**
+Chụp lại màn hình terminal hiển thị `sudo nginx -t` thành công và `Active: active (running)` của lệnh status -> Lưu file là: **`02-nginx.png`**.
 
 ---
 
-## 3.4. Kiểm tra hoạt động thực tế
+## BƯỚC 5: CẤU HÌNH TƯỜNG LỬA BẢO MẬT (UFW FIREWALL)
 
-1. **Kiểm tra từ dòng lệnh bằng `curl`:**
-   ```bash
-   curl -I http://127.0.0.1:8090/
-   ```
-   *Kết quả phản hồi thành công:*
-   ```text
-   HTTP/1.1 200 OK
-   Server: nginx/...
-   Content-Type: text/html
-   ```
-
-2. **Kiểm tra trên Trình duyệt máy tính cá nhân (Chrome/Edge):**
-   - Mở trình duyệt và gõ địa chỉ: `http://221.121.4.67:8090/`
-   -> Hiển thị trang web HTML có tên *Lê Phương Linh - HNK24CNTT1*.
-   - Nếu có trang phụ: truy cập `http://221.121.4.67:8091/` hoặc `http://221.121.4.67:8090/dashboard/`.
-
----
-
-# PHẦN 4: ĐÓNG GÓI MINH CHỨNG & CHẠY SYSTEM INSPECTOR (10 ĐIỂM)
-
-## 4.1. Tạo thư mục `submission/`
+### 5.1. Thiết lập các quy tắc tường lửa UFW
 ```bash
-cd ~/devops-hackathon
-mkdir -p submission
+# 1. Bắt buộc mở cổng SSH (để không bị mất quyền điều khiển VPS)
+sudo ufw allow 22/tcp
+
+# 2. Mở cổng dịch vụ Web 8085
+sudo ufw allow 8085/tcp
+
+# 3. Kích hoạt UFW (Nhấn 'y' rồi Enter nếu terminal hỏi xác nhận)
+sudo ufw enable
+
+# 4. Kiểm tra trạng thái chi tiết của tường lửa
+sudo ufw status verbose
 ```
-
-## 4.2. Copy các file cấu hình Nginx vào `submission/`
-```bash
-# Copy toàn bộ file cấu hình site vừa tạo vào thư mục nộp bài
-cp /etc/nginx/sites-available/lplinh-HNK24CNTT1-*.conf ~/devops-hackathon/submission/
-```
-
-## 4.3. Chạy công cụ kiểm tra và tạo file báo cáo tự động (System Inspector)
-```bash
-cd ~/devops-hackathon
-node system-inspector.js
-```
-*Kết quả đạt được:*
-Hệ thống chạy quét toàn bộ dịch vụ và hiển thị thông báo tạo thành công file: `submission/report.enc`.
-
-## 4.4. Lưu lại toàn bộ lịch sử dòng lệnh (History)
-```bash
-history > ~/devops-hackathon/submission/history.log
-```
-
-## 4.5. Kiểm tra các file đã có trong thư mục nộp bài
-```bash
-ls -la ~/devops-hackathon/submission/
-```
-*Kết quả nhìn thấy đầy đủ:*
-- `history.log`
-- `report.enc`
-- `lplinh-HNK24CNTT1-task.conf` (hoặc các file `.conf` bạn đã tạo)
-
----
-
-# PHẦN 5: TẢI BÀI NỘP VỀ MÁY QUA BITVISE SFTP & CHECKLIST
-
-> ⚠️ **LƯU Ý:** Bitvise **KHÔNG tự động lưu**, bạn phải chủ động thao tác kéo thả chuột từ VPS về máy tính theo hướng dẫn sau.
-
-### Sơ đồ thao tác trên cửa sổ Bitvise SFTP:
+*Kết quả hiển thị:*
 ```text
-┌───────────────────────────────────────┬───────────────────────────────────────┐
-│     KHUNG BÊN TRÁI (Local files)      │     KHUNG BÊN PHẢI (Remote files)     │
-│       (MÁY TÍNH CỦA BẠN - WINDOWS)    │              (MÁY ẢO VPS LINUX)       │
-├───────────────────────────────────────┼───────────────────────────────────────┤
-│  📁 Desktop                           │                                       │
-│  📁 Downloads                         │  📁 devops-hackathon  ◄───[BÀI LÀM]   │
-│  📁 D:\DevOps - RA                    │      └── submission/                  │
-│                                       │                                       │
-│   [Bước 1: Chọn thư mục muốn lưu]     │   [Bước 2: KÉO TỪ PHẢI ──► THẢ SANG TRÁI]
-└───────────────────────────────────────┴───────────────────────────────────────┘
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere
+8085/tcp                   ALLOW IN    Anywhere
+22/tcp (v6)                ALLOW IN    Anywhere (v6)
+8085/tcp (v6)              ALLOW IN    Anywhere (v6)
 ```
 
-### Chi tiết 3 bước tải bài về máy tính:
-1. **Bước 1 (Khung bên trái - Máy tính):** Nhấp chuột chọn thư mục trên máy tính mà bạn muốn lưu bài (ví dụ: `Desktop` hoặc thư mục `D:\DevOps - RA`).
-2. **Bước 2 (Khung bên phải - VPS):** Tìm thư mục `devops-hackathon` (nằm trong `/home/lplinh-HNK24CNTT1/` hoặc `/root/`).
-   - **Cách 1 (Kéo thả):** Giữ chuột trái vào `devops-hackathon` ở khung phải ➡️ Kéo sang vùng trắng khung trái ➡️ Nhả chuột ra.
-   - **Cách 2 (Chuột phải):** Nhấp chuột phải vào `devops-hackathon` ở khung phải ➡️ Chọn **`Download`**.
-3. **Bước 3 (Kiểm tra):**
-   - Nhìn thanh tiến trình dưới đáy cửa sổ SFTP chạy đạt **100%**.
-   - Mở File Explorer trên máy tính Windows ra kiểm tra thấy thư mục `devops-hackathon` đã có đầy đủ cấu trúc:
+📸 **CHỤP ẢNH MINH CHỨNG SỐ 3:**
+Chụp lại màn hình kết quả lệnh `sudo ufw status verbose` -> Lưu file là: **`03-ufw.png`**.
+
+---
+
+## BƯỚC 6: KIỂM TRA TRUY CẬP WEBSITE & LỊCH SỬ GIT
+
+### 6.1. Kiểm tra bằng lệnh Curl trên VPS
+```bash
+curl -I http://221.121.4.67:8085
+```
+*Kết quả trả về:* `HTTP/1.1 200 OK`.
+
+### 6.2. Kiểm tra trên trình duyệt Web cá nhân
+Mở trình duyệt (Chrome/Edge) trên máy tính cá nhân và truy cập:
 ```text
-devops-hackathon/
-├── templates/
-├── submission/
-│   ├── history.log
-│   ├── lplinh-HNK24CNTT1-task.conf
-│   └── report.enc
-├── environment-check.js
-└── system-inspector.js
+http://221.121.4.67:8085
+```
+Trang web hiển thị giao diện thông tin sinh viên *Lê Phương Linh - HNK24CNTT1*.
+
+📸 **CHỤP ẢNH MINH CHỨNG SỐ 4:**
+Chụp lại toàn bộ cửa sổ trình duyệt (nhìn thấy rõ thanh địa chỉ `http://221.121.4.67:8085` và nội dung trang web) -> Lưu file là: **`04-website.png`**.
+
+---
+
+### 6.3. Kiểm tra lịch sử Git log trên VPS
+Trên Terminal của VPS, di chuyển vào thư mục dự án và xem lịch sử commit:
+```bash
+cd /var/www/devops-hackathon-de001-lephuonglinh
+git log --oneline
+```
+
+📸 **CHỤP ẢNH MINH CHỨNG SỐ 5:**
+Chụp lại màn hình hiển thị danh sách các commit -> Lưu file là: **`05-git-log.png`**.
+
+---
+
+## BƯỚC 7: MÔ PHỎNG QUY TRÌNH CẬP NHẬT WEBSITE (GIT PULL WORKFLOW)
+
+Đây là bài kiểm tra khả năng cập nhật website không gián đoạn dịch vụ:
+
+### 7.1. Chỉnh sửa nội dung trên máy tính (IntelliJ IDEA)
+1. Mở file `src/index.html` trong IntelliJ IDEA.
+2. Tìm đến phần cuối trang và thêm dòng cập nhật lần 2:
+```html
+        <div class="footer">
+            <p><strong>Cập nhật lần 2</strong> - Hoàn thành triển khai Nginx & UFW thành công!</p>
+        </div>
+```
+3. Lưu file lại.
+
+### 7.2. Commit và Push thay đổi lên GitHub
+Mở Terminal trên IntelliJ IDEA và chạy:
+```bash
+git add src/index.html
+git commit -m "Cập nhật lần 2"
+git push origin main
+```
+
+### 7.3. Kéo mã nguồn mới về VPS bằng `git pull`
+Quay lại Terminal của VPS (hoặc cửa sổ SSH), chạy:
+```bash
+cd /var/www/devops-hackathon-de001-lephuonglinh
+git pull
+```
+*Kết quả:* Git báo tải về thành công: `Fast-forward ... src/index.html | ...`.
+> 💡 **Điểm mấu chốt:** Nginx đọc trực tiếp file tĩnh từ thư mục `src/`, vì vậy bạn **không cần reload hay restart Nginx**, trang web sẽ tự động hiển thị nội dung mới ngay lập tức!
+
+### 7.4. Kiểm tra trên trình duyệt
+Quay lại trình duyệt web và nhấn **F5** (Refresh). Dòng chữ *"Cập nhật lần 2"* xuất hiện trên trang web.
+
+📸 **CHỤP ẢNH MINH CHỨNG SỐ 6:**
+Chụp lại màn hình trình duyệt có hiển thị dòng chữ *"Cập nhật lần 2"* -> Lưu file là: **`06-update.png`**.
+
+---
+
+## BƯỚC 8: ĐƯA ẢNH MINH CHỨNG LÊN GITHUB & HOÀN TẤT BÀI THI
+
+### 8.1. Đưa 6 ảnh minh chứng vào dự án trên IntelliJ
+1. Copy 6 file ảnh bạn vừa chụp (`01-user.png` đến `06-update.png`) vào thư mục `screenshots/` của dự án trên máy tính.
+2. Kiểm tra cây thư mục trong IntelliJ IDEA đảm bảo có đủ 6 ảnh:
+```text
+screenshots/
+├── 01-user.png
+├── 02-nginx.png
+├── 03-ufw.png
+├── 04-website.png
+├── 05-git-log.png
+└── 06-update.png
+```
+
+### 8.2. Push toàn bộ ảnh lên GitHub
+Chạy lệnh trên Terminal của IntelliJ:
+```bash
+git add screenshots/
+git commit -m "Thêm ảnh minh chứng"
+git push origin main
 ```
 
 ---
 
-## BẢNG TỔNG HỢP KIỂM TRA NHANH TRƯỚC KHI NỘP BÀI
+## BẢNG TỔNG HỢP LỆNH KIỂM TRA NHANH TRƯỚC KHI KẾT THÚC
 
-| STT | Nội dung kiểm tra | Lệnh chạy trên Terminal | Kết quả đạt chuẩn |
-| :--- | :--- | :--- | :--- |
-| **1** | Tài khoản thực hiện | `whoami` | `lplinh-HNK24CNTT1` (hoặc `root` nếu không tạo user) |
-| **2** | Quyền thư mục Web | `ls -ld /var/www/task-app` | `drwxr-xr-x ... www-data www-data` |
-| **3** | Cú pháp Nginx | `sudo nginx -t` | `syntax is ok` & `test is successful` |
-| **4** | Trạng thái Nginx | `sudo systemctl is-active nginx` | `active` |
-| **5** | Firewall UFW | `sudo ufw status numbered` | Cổng 22, 8090 (và 8091) đều `ALLOW IN` |
-| **6** | Phản hồi Web Server | `curl -I http://127.0.0.1:8090` | Trả về mã `HTTP/1.1 200 OK` |
-| **7** | Minh chứng nộp bài | `ls -la ~/devops-hackathon/submission/` | Đủ file `history.log`, `report.enc`, `.conf` |
+| Mục tiêu kiểm tra | Câu lệnh Terminal | Kết quả mong đợi |
+| :--- | :--- | :--- |
+| **Tài khoản đang dùng** | `whoami` | `lplinh-HNK24CNTT1` |
+| **Quyền sở hữu thư mục web** | `ls -ld /var/www/devops-hackathon-de001-lephuonglinh` | `lplinh-HNK24CNTT1 lplinh-HNK24CNTT1` |
+| **Cú pháp Nginx** | `sudo nginx -t` | `syntax is ok` & `test is successful` |
+| **Trạng thái Nginx** | `sudo systemctl is-active nginx` | `active` |
+| **Quy tắc Tường lửa** | `sudo ufw status numbered` | Cổng 22 và 8085 đều `ALLOW IN` |
+| **Phản hồi HTTP Server** | `curl -I http://221.121.4.67:8085` | `HTTP/1.1 200 OK` |
+| **File trên GitHub** | Truy cập link repo trên trình duyệt | Đủ `.gitignore`, `src/`, `nginx/`, `screenshots/` (6 ảnh) |
