@@ -2,6 +2,7 @@
 ## Ứng dụng: Spring Boot (Java 17, Gradle) & MySQL
 > **Dự án thực hành minh họa**: `RestAPI_Session04`  
 > **Địa chỉ IP VPS thực tế**: `221.121.4.132`  
+> **GitHub Username**: `phuonglinhle268`  
 > **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`  
 > **Docker Hub Username**: `phuonglinhle`  
 > **Linux Username sinh viên**: `lplinh_k24cntt1`  
@@ -15,6 +16,7 @@ Các tham số sử dụng trong toàn bộ bài thi:
 - **Địa chỉ IP VPS**: `221.121.4.132`
 - **User quản trị ban đầu của VPS**: `root`
 - **User sinh viên tạo mới**: `lplinh_k24cntt1`
+- **Tài khoản GitHub**: `phuonglinhle268`
 - **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`
 - **Tài khoản Docker Hub**: `phuonglinhle`
 - **Tên Docker Image**: `phuonglinhle/ptit-demo-final:latest`
@@ -162,7 +164,7 @@ cd devops-exam
 cat << 'EOF' > info.txt
 Họ và tên: Lê Phương Linh
 Mã sinh viên: CNTT1_IT209
-GitHub Repo: https://github.com/phuonglinhle/PTIT_CNTT1_IT209_Demo_Final
+GitHub Repo: https://github.com/phuonglinhle268/PTIT_CNTT1_IT209_Demo_Final
 EOF
 ```
 
@@ -175,7 +177,7 @@ ls -l info.txt
   ```text
   Họ và tên: Lê Phương Linh
   Mã sinh viên: CNTT1_IT209
-  GitHub Repo: https://github.com/phuonglinhle/PTIT_CNTT1_IT209_Demo_Final
+  GitHub Repo: https://github.com/phuonglinhle268/PTIT_CNTT1_IT209_Demo_Final
   -rw-rw-r-- 1 lplinh_k24cntt1 lplinh_k24cntt1 112 Oct 14 14:00 info.txt
   ```
 
@@ -351,8 +353,8 @@ git commit -m "feat: initial spring boot project RestAPI_Session04"
 1. Tạo repo mới trên GitHub cá nhân: `PTIT_CNTT1_IT209_Demo_Final`.
 2. Kết nối và push lên GitHub:
 ```bash
-# -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'phuonglinhle' bằng username GitHub của bạn
-git remote add origin https://github.com/phuonglinhle/PTIT_CNTT1_IT209_Demo_Final.git
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'phuonglinhle268' bằng username GitHub của bạn
+git remote add origin https://github.com/phuonglinhle268/PTIT_CNTT1_IT209_Demo_Final.git
 git branch -M main
 git push -u origin main
 ```
