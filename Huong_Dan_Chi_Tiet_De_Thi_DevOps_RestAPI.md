@@ -3,29 +3,8 @@
 > **Dự án thực hành minh họa**: `RestAPI_Session04`  
 > **Địa chỉ IP VPS thực tế**: `221.121.4.132`  
 > **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`  
+> **Docker Hub Username**: `phuonglinhle`  
 > **Mục tiêu**: Hướng dẫn chi tiết từng câu lệnh, từng bước thao tác, giải thích kỹ thuật, kết quả đầu ra sau mỗi bước, kèm **chú thích ngay bên cạnh code** các vị trí cần thay đổi nếu sang dự án khác.
-
----
-
-## MỤC LỤC
-1. [Chuẩn bị môi trường & Thông tin tham số thực tế](#chuẩn-bị-môi-trường--thông-tin-tham-số-thực-tế)
-2. [BÀI 1: Quản trị VPS Linux (2.0 điểm)](#bài-1-quản-trị-vps-linux-20-điểm)
-   - [Yêu cầu 1.1: Kết nối & Quản lý tài khoản (0.5 điểm)](#yêu-cầu-11--kết-nối-và-quản-lý-tài-khoản-05-điểm)
-   - [Yêu cầu 1.2: Quản lý nhóm & Quyền Docker (0.5 điểm)](#yêu-cầu-12--quản-lý-nhóm-và-quyền-05-điểm)
-   - [Yêu cầu 1.3: Quản lý file, thư mục & Phân quyền (1.0 điểm)](#yêu-cầu-13--quản-lý-file-và-thư-mục-10-điểm)
-3. [BÀI 2: Docker trên VPS (2.0 điểm)](#bài-2-docker-trên-vps-20-điểm)
-   - [Yêu cầu 2.1: Hoàn thiện Dockerfile cho Spring Boot (0.75 điểm)](#yêu-cầu-21--hoàn-thiện-dockerfile-075-điểm)
-   - [Yêu cầu 2.2: Hoàn thiện docker-compose.yml (0.75 điểm)](#yêu-cầu-22--hoàn-thiện-docker-compose-075-điểm)
-   - [Yêu cầu 2.3: Khởi chạy và kiểm tra Docker (0.5 điểm)](#yêu-cầu-23--kiểm-tra-docker-05-điểm)
-4. [BÀI 3: Git & GitHub (1.5 điểm)](#bài-3-git-và-github-15-điểm)
-   - [Yêu cầu 3.1: Tạo Git Repo Local & Remote GitHub (0.5 điểm)](#yêu-cầu-31--tạo-repository-05-điểm)
-   - [Yêu cầu 3.2: Tạo nhánh tính năng & Commit (0.5 điểm)](#yêu-cầu-32--commit-và-phát-triển-chức-năng-05-điểm)
-   - [Yêu cầu 3.3: Tạo kịch bản & Xử lý Merge Conflict (0.5 điểm)](#yêu-cầu-33--xử-lý-conflict-05-điểm)
-5. [BÀI 4: Phát triển Chức năng & Triển khai CI/CD (4.5 điểm)](#bài-4-phát-triển-chức-năng-và-triển-khai-cicd-45-điểm)
-   - [Yêu cầu 4.1: Phát triển API mới (GET /api/employees/count) (1.0 điểm)](#yêu-cầu-41--phát-triển-api-mới-10-điểm)
-   - [Yêu cầu 4.2: Cấu hình Secrets & Workflow GitHub Actions (1.5 điểm)](#yêu-cầu-42--xây-dựng-github-actions-cicd-15-điểm)
-   - [Yêu cầu 4.3: Tự động triển khai & Kiểm chứng thực tế (1.5 điểm)](#yêu-cầu-43--triển-khai-và-kiểm-chứng-15-điểm)
-6. [Bảng tổng hợp Troubleshooting & Lỗi thường gặp](#bảng-tổng-hợp-troubleshooting--lỗi-thường-gặp)
 
 ---
 
@@ -36,8 +15,8 @@ Các tham số sử dụng trong bài:
 - **User quản trị ban đầu**: `root` hoặc `ubuntu`
 - **User sinh viên tạo mới**: `devops_student`
 - **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`
-- **Tài khoản Docker Hub**: `mydevopsuser` *(thay bằng username Docker Hub của bạn)*
-- **Tên Docker Image**: `mydevopsuser/ptit-demo-final:latest`
+- **Tài khoản Docker Hub**: `phuonglinhle`
+- **Tên Docker Image**: `phuonglinhle/ptit-demo-final:latest`
 - **Cổng Backend ứng dụng**: `8080`
 - **Cổng MySQL trên host**: `3306`
 
@@ -252,8 +231,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi tên image theo tên project tương ứng
-    image: ptit-demo-final:latest
+    # Tên image chứa username Docker Hub 'phuonglinhle'
+    image: phuonglinhle/ptit-demo-final:latest
     container_name: restapi_backend
     restart: unless-stopped
     ports:
@@ -307,7 +286,7 @@ docker compose ps
 ```bash
 docker images
 ```
-- **Kết quả đạt được**: Thấy image `ptit-demo-final:latest` và `mysql:8.0`.
+- **Kết quả đạt được**: Thấy image `phuonglinhle/ptit-demo-final:latest` và `mysql:8.0`.
 
 #### Bước 2.3.4: Xem Logs của Backend để xác nhận kết nối Database thành công
 ```bash
@@ -555,8 +534,8 @@ cat ~/.ssh/id_rsa_deploy
 #### Bước 4.2.2: Cấu hình GitHub Actions Secrets
 Vào Repo `PTIT_CNTT1_IT209_Demo_Final`: **Settings** $\rightarrow$ **Secrets and variables** $\rightarrow$ **Actions** $\rightarrow$ **New repository secret**:
 
-- `DOCKER_USERNAME`: Username Docker Hub của bạn
-- `DOCKER_PASSWORD`: Token Docker Hub
+- `DOCKER_USERNAME`: **`phuonglinhle`**
+- `DOCKER_PASSWORD`: Token Docker Hub của bạn
 - `VPS_HOST`: `221.121.4.132`
 - `VPS_USER`: `devops_student`
 - `VPS_SSH_KEY`: Nội dung Private Key `id_rsa_deploy`
@@ -609,7 +588,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'ptit-demo-final' bằng tên repo image của dự án mới
+          # Tên image tự động ghép username 'phuonglinhle' từ secret
           tags: ${{ secrets.DOCKER_USERNAME }}/ptit-demo-final:latest
 
   # ============================================================
@@ -643,7 +622,7 @@ jobs:
           script: |
             cd /home/${{ secrets.VPS_USER }}/devops-exam/
             
-            # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'ptit-demo-final' bằng tên image mới
+            # Kéo image mới nhất của phuonglinhle về VPS
             docker pull ${{ secrets.DOCKER_USERNAME }}/ptit-demo-final:latest
             
             # Restart backend container với image vừa kéo
