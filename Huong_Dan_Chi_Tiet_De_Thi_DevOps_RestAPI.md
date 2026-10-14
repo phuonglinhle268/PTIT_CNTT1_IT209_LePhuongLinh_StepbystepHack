@@ -185,7 +185,6 @@ FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-# -> ĐỔI NẾU KHÁC DỰ ÁN: Gradle là 'build/libs/*.jar' | Maven là 'target/*.jar'
 ARG JAR_FILE=build/libs/*.jar
 
 COPY ${JAR_FILE} app.jar
@@ -523,11 +522,9 @@ jobs:
           # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay '17' bằng '21' hoặc '11' tùy phiên bản Java của dự án
           java-version: '17'
           distribution: 'temurin'
-          # -> ĐỔI NẾU KHÁC DỰ ÁN: Dùng 'gradle' hoặc 'maven' tùy công cụ build
           cache: gradle
 
       - name: 3. Cấp quyền & Build ứng dụng (JAR)
-        # -> ĐỔI NẾU KHÁC DỰ ÁN: Nếu là Maven đổi thành: chmod +x ./mvnw && ./mvnw clean package -DskipTests
         run: |
           chmod +x ./gradlew
           ./gradlew bootJar -x test
