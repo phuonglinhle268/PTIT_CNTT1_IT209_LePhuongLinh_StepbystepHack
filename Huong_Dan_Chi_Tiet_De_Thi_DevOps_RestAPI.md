@@ -6,7 +6,7 @@
 > **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`  
 > **Docker Hub Username**: `phuonglinhle`  
 > **Linux Username sinh viên**: `lplinh_k24cntt1`  
-> **Mục tiêu**: Hướng dẫn thực hành có phân định rõ ràng: **🖥️ Lệnh chạy trên Terminal VPS**, **💻 Lệnh chạy trên Terminal máy cá nhân (Local)**, và **🌐 Thao tác trên trình duyệt**.
+> **Mục tiêu**: Hướng dẫn thực hành có phân định rõ ràng vị trí thực hiện (**🖥️ VPS**, **💻 Máy Local**, **🌐 Trình duyệt**), **chỉ chú thích các vị trí cần sửa khi đổi sang dự án khác**, không thêm giải thích rườm rà.
 
 ---
 
@@ -21,7 +21,7 @@ Các tham số sử dụng trong toàn bộ bài thi:
 - **Tài khoản Docker Hub**: `phuonglinhle`
 - **Tên Docker Image**: `phuonglinhle/ptit-demo-final:latest`
 - **Cổng Backend ứng dụng**: `8080`
-- **Cổng MySQL trên host**: `3306`
+- **Cổng MySQL trên host**: `3306` (hoặc `3307`)
 
 ---
 
@@ -29,29 +29,18 @@ Các tham số sử dụng trong toàn bộ bài thi:
 > 🖥️ **VỊ TRÍ THỰC HIỆN**: **Trên Terminal VPS (kết nối SSH bằng quyền root)**
 
 ### 0.1 Cập nhật hệ thống & cài các tiện ích cơ bản
-Đăng nhập vào VPS với quyền `root`:
 ```bash
 ssh root@221.121.4.132
-```
-Chạy cập nhật gói hệ điều hành và cài đặt các công cụ cơ bản (`curl`, `wget`, `git`, `nano`):
-```bash
 apt update && apt upgrade -y
 apt install -y curl wget git nano net-tools ca-certificates gnupg
 ```
-- **Kết quả đạt được**: Các gói phần mềm được cài đặt thành công, không báo lỗi mạng hay dependencies.
+- **Kết quả đạt được**: Các gói phần mềm được cài đặt thành công.
 
 ### 0.2 Cài đặt Docker Engine & Docker Compose chính thức
-Chạy script cài đặt tự động từ Docker:
 ```bash
 curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
-```
-Khởi động và kích hoạt Docker chạy cùng hệ thống:
-```bash
 systemctl enable --now docker
-```
-Kiểm tra phiên bản đã cài đặt:
-```bash
 docker --version
 docker compose version
 ```
@@ -65,7 +54,7 @@ docker compose version
 
 ## BÀI 1: Quản trị VPS Linux (2.0 điểm)
 > 🖥️ **VỊ TRÍ THỰC HIỆN**: **100% trên Terminal VPS (SSH: `221.121.4.132`)**  
-> **Quy định bắt buộc**: Tuyệt đối không dùng tài khoản `root` để thao tác git, build source code hay deploy thường ngày.
+> **Quy định bắt buộc**: Không dùng tài khoản `root` để thao tác git, build source code hay deploy thường ngày.
 
 ### Yêu cầu 1.1 — Kết nối và quản lý tài khoản (0.5 điểm)
 
@@ -83,13 +72,9 @@ id
 #### Bước 1.1.2: Tạo tài khoản Linux mới `lplinh_k24cntt1`
 ```bash
 adduser lplinh_k24cntt1
-```
-- Nhập mật khẩu (ví dụ: `Password123@`), xác nhận lại mật khẩu, các thông tin phụ khác nhấn `Enter`, gõ `Y` để xác nhận.
-
-Cấp quyền quản trị `sudo` cho tài khoản:
-```bash
 usermod -aG sudo lplinh_k24cntt1
 ```
+- Nhập mật khẩu (ví dụ: `Password123@`), xác nhận lại mật khẩu, các thông tin phụ khác nhấn `Enter`, gõ `Y` để xác nhận.
 
 #### Bước 1.1.3: Chuyển sang tài khoản mới và kiểm tra
 ```bash
@@ -126,12 +111,7 @@ getent group docker
 #### Bước 1.2.3: Bổ sung tài khoản vào nhóm `docker`
 ```bash
 sudo usermod -aG docker lplinh_k24cntt1
-
-# Áp dụng quyền ngay lập tức trong phiên hiện tại
 newgrp docker
-```
-Kiểm tra lại bằng lệnh `id`:
-```bash
 id
 ```
 - **Kết quả đạt được**: Trong danh sách `groups` xuất hiện `docker`.
@@ -146,7 +126,6 @@ docker ps
 
 ### Yêu cầu 1.3 — Quản lý file và thư mục (1.0 điểm)
 
-Đảm bảo đứng tại thư mục home `/home/lplinh_k24cntt1`:
 ```bash
 cd ~
 pwd
@@ -181,7 +160,6 @@ ls -l info.txt
   ```
 
 #### Bước 1.3.4: Thiết lập và kiểm tra quyền truy cập (`chmod`, `chown`)
-Cấp quyền bảo mật: Chủ sở hữu đọc/ghi (`rw-`), nhóm và người ngoài không có quyền (`---`):
 ```bash
 chmod 600 info.txt
 chown lplinh_k24cntt1:lplinh_k24cntt1 info.txt
@@ -196,26 +174,22 @@ ls -la info.txt
 ---
 
 ## BÀI 2: Docker trên VPS (2.0 điểm)
-> 💻 **VỊ TRÍ THỰC HIỆN**: **Tạo 2 file dưới đây trên MÁY CÁ NHÂN (LOCAL) trong thư mục gốc của dự án `RestAPI_Session04`**  
-> *(Đường dẫn: `d:\DevOps - RA\RestAPI_Session04\Dockerfile` và `d:\DevOps - RA\RestAPI_Session04\docker-compose.yml`)*
+> 💻 **VỊ TRÍ THỰC HIỆN**: **Tạo 2 file dưới đây trên MÁY CÁ NHÂN (LOCAL) trong thư mục gốc của dự án `RestAPI_Session04`**
 
 ### Yêu cầu 2.1 — Hoàn thiện Dockerfile (0.75 điểm)
 > 💻 **Tạo file `Dockerfile` trong thư mục `RestAPI_Session04` trên máy local:**
 
 ```dockerfile
-# Base image JRE Alpine gọn nhẹ, bảo mật
 # -> ĐỔI NẾU KHÁC DỰ ÁN: Java 21 dùng 'eclipse-temurin:21-jre-alpine', Java 11 dùng 'eclipse-temurin:11-jre-alpine'
 FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-# Khai báo đường dẫn file JAR build ra
 # -> ĐỔI NẾU KHÁC DỰ ÁN: Gradle là 'build/libs/*.jar' | Maven là 'target/*.jar'
 ARG JAR_FILE=build/libs/*.jar
 
 COPY ${JAR_FILE} app.jar
 
-# Cổng lắng nghe của Spring Boot
 # -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi theo server.port trong application.properties (ví dụ 8081, 3000)
 EXPOSE 8080
 
@@ -231,9 +205,6 @@ ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 
 ```yaml
 services:
-  # ------------------------------------------------------------
-  # 1. DỊCH VỤ DATABASE
-  # ------------------------------------------------------------
   mysql-db:
     # -> ĐỔI NẾU KHÁC DỰ ÁN: Nếu dùng PostgreSQL thì đổi thành 'postgres:15-alpine'
     image: mysql:8.0
@@ -244,8 +215,8 @@ services:
       MYSQL_ROOT_PASSWORD: 1234$
       MYSQL_DATABASE: db_cntt3_api_ss4
     ports:
-      # -> ĐỔI NẾU KHÁC DỰ ÁN: Cổng ngoài host : Cổng container (PostgreSQL là 5432:5432)
-      - "3306:3306"
+      # -> ĐỔI NẾU KHÁC DỰ ÁN: Cổng ngoài host : Cổng container (đổi 3307:3306 nếu host bị trùng port 3306)
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -256,14 +227,11 @@ services:
       timeout: 5s
       retries: 5
 
-  # ------------------------------------------------------------
-  # 2. DỊCH VỤ BACKEND: SPRING BOOT
-  # ------------------------------------------------------------
   backend:
     build:
       context: .
       dockerfile: Dockerfile
-    # Tên image chứa username Docker Hub 'phuonglinhle'
+    # -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi username Docker Hub và tên image theo dự án mới
     image: phuonglinhle/ptit-demo-final:latest
     container_name: restapi_backend
     restart: unless-stopped
@@ -296,37 +264,25 @@ networks:
 
 ### Yêu cầu 2.3 — Kiểm tra Docker (0.5 điểm)
 
-> [!IMPORTANT]
-> **LƯU Ý CỰC KỲ QUAN TRỌNG VỀ VỊ TRÍ CHẠY LỆNH NÀY**:
-> - Nếu máy tính cá nhân của bạn **có cài Docker Desktop**: Bạn có thể mở terminal local tại thư mục `RestAPI_Session04` để chạy `./gradlew bootJar` và `docker compose up -d` test thử tại chỗ.
-> - **Nếu máy cá nhân KHÔNG cài Docker Desktop**: Bạn **KHÔNG CẦN** chạy bước này trên máy cá nhân! Hãy làm tiếp **Bài 3** (push code) và **Bài 4** (CI/CD). Hệ thống GitHub Actions sẽ tự động build file JAR và tự động triển khai chạy lên VPS cho bạn. Khi đó, trên VPS bạn chỉ cần gõ `docker ps` và `docker logs restapi_backend` là có ngay minh chứng!
+> **Lưu ý**:
+> - Nếu máy tính cá nhân có Docker Desktop: Chạy `./gradlew bootJar` và `docker compose up -d` test thử tại chỗ.
+> - Nếu máy cá nhân không có Docker Desktop: Chỉ cần tạo sẵn 2 file trên, sang Bài 4 GitHub Actions sẽ tự động build và chạy lên VPS cho bạn.
 
 ---
 
 ## BÀI 3: Git & GitHub (1.5 điểm)
 > 💻 **VỊ TRÍ THỰC HIỆN**: **100% trên Terminal MÁY CÁ NHÂN (LOCAL)**  
-> *(Mở Terminal / PowerShell / Git Bash tại thư mục `d:\DevOps - RA\RestAPI_Session04`)*
+> *(Tại thư mục `RestAPI_Session04`)*
 
 ### Yêu cầu 3.1 — Tạo Repository (0.5 điểm)
 
-#### Bước 3.1.1: Khởi tạo Git cục bộ trong thư mục source code (trên máy local)
 ```bash
 git init
 git checkout -b main
-```
-
-#### Bước 3.1.2: Commit ban đầu
-```bash
-git status
 git add .
 git commit -m "feat: initial spring boot project RestAPI_Session04"
-```
 
-#### Bước 3.1.3: Tạo GitHub Repo và kết nối Remote
-1. 🌐 Mở trình duyệt, vào [GitHub](https://github.com/new), tạo repo mới: `PTIT_CNTT1_IT209_Demo_Final`
-2. 💻 Quay lại terminal máy local, kết nối và push lên GitHub:
-```bash
-# -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'phuonglinhle268' bằng username GitHub của bạn
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Thay link repo GitHub tương ứng
 git remote add origin https://github.com/phuonglinhle268/PTIT_CNTT1_IT209_Demo_Final.git
 git branch -M main
 git push -u origin main
@@ -338,13 +294,9 @@ git push -u origin main
 ### Yêu cầu 3.2 — Commit và phát triển chức năng (0.5 điểm)
 > 💻 **VỊ TRÍ THỰC HIỆN**: **Trên Terminal máy local**
 
-#### Bước 3.2.1: Tạo nhánh `feature/employee-count`
 ```bash
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi tên nhánh theo yêu cầu đề (ví dụ feature/product-count)
 git checkout -b feature/employee-count
-```
-
-#### Bước 3.2.2: Chỉnh sửa và commit
-```bash
 echo "Tính năng đếm nhân viên đang được phát triển" >> README.md
 git add README.md
 git commit -m "feat(employee): add employee count feature documentation"
@@ -386,7 +338,7 @@ git merge feature/employee-count
   ```
 
 #### Bước 3.3.4: Giải quyết Conflict
-Mở file `README.md` trong VS Code, xóa các ký hiệu `<<<<<<<`, `=======`, `>>>>>>>` và sửa lại thành:
+Mở file `README.md` trong IntelliJ / VS Code, xóa các ký hiệu `<<<<<<<`, `=======`, `>>>>>>>` và sửa lại thành:
 ```markdown
 Phiên bản hệ thống: Version 1.1.0 Production (Included Employee Counter)
 ```
@@ -418,8 +370,6 @@ git log --oneline --graph --all
 
 ### Yêu cầu 4.1 — Phát triển API mới (1.0 điểm)
 > 💻 **VỊ TRÍ THỰC HIỆN**: **Code trên máy cá nhân (LOCAL) trong project `RestAPI_Session04`**
-
-Tạo 4 file Java theo cấu trúc dự án:
 
 #### 1. Entity `Employee.java` (`src/main/java/ra/demo/model/entity/Employee.java`):
 ```java
@@ -506,7 +456,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ra.demo.service.EmployeeService;
 
 @RestController
-# -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi endpoint theo đề bài yêu cầu
+// -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi endpoint theo đề bài yêu cầu
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor
 public class EmployeeController {
@@ -533,9 +483,6 @@ chmod 700 ~/.ssh
 ssh-keygen -t rsa -b 4096 -C "github-actions-deploy" -f ~/.ssh/id_rsa_deploy -N ""
 cat ~/.ssh/id_rsa_deploy.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
-```
-Xem và copy toàn bộ Private Key:
-```bash
 cat ~/.ssh/id_rsa_deploy
 ```
 
@@ -564,9 +511,6 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # ============================================================
-  # GIAI ĐOẠN 1: BUILD & PUSH IMAGE (CI)
-  # ============================================================
   build-and-test:
     runs-on: ubuntu-latest
     steps:
@@ -600,12 +544,9 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          # Tên image tự động ghép username 'phuonglinhle' từ secret
+          # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'ptit-demo-final' bằng tên repo image của dự án mới
           tags: ${{ secrets.DOCKER_USERNAME }}/ptit-demo-final:latest
 
-  # ============================================================
-  # GIAI ĐOẠN 2: DEPLOY LÊN VPS (CD)
-  # ============================================================
   deploy-to-vps:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -621,7 +562,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           source: "docker-compose.yml"
-          # Thư mục đích trên VPS của user lplinh_k24cntt1
+          # -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi thư mục đích trên VPS nếu có quy định khác
           target: "/home/${{ secrets.VPS_USER }}/devops-exam/"
 
       - name: 3. SSH vào VPS và triển khai phiên bản mới
@@ -634,11 +575,11 @@ jobs:
           script: |
             cd /home/${{ secrets.VPS_USER }}/devops-exam/
             
-            # Kéo image mới nhất của phuonglinhle về VPS
+            # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'ptit-demo-final' bằng tên image mới
             docker pull ${{ secrets.DOCKER_USERNAME }}/ptit-demo-final:latest
             
-            # Restart backend container với image vừa kéo
-            docker compose down backend || true
+            docker compose stop backend || true
+            docker compose rm -f backend || true
             docker compose up -d
             
             docker image prune -f
@@ -661,7 +602,7 @@ git push origin main
 #### Bước 4.3.2: Kiểm tra trạng thái trên GitHub Actions
 > 🌐 **VỊ TRÍ THỰC HIỆN**: **Trên Trình duyệt Web (tab Actions của Repo GitHub)**
 
-Vào tab **Actions** trên GitHub `PTIT_CNTT1_IT209_Demo_Final`, quan sát tiến trình: Cả 2 job `build-and-test` và `deploy-to-vps` đều hiện tích xanh ✅.
+Vào tab **Actions** trên GitHub `PTIT_CNTT1_IT209_Demo_Final`: Cả 2 job `build-and-test` và `deploy-to-vps` đều hiện tích xanh ✅.
 
 #### Bước 4.3.3: Kiểm chứng trực tiếp trên VPS
 > 🖥️ **VỊ TRÍ THỰC HIỆN**: **Trên Terminal VPS (`lplinh_k24cntt1@221.121.4.132`)**
@@ -670,7 +611,7 @@ Vào tab **Actions** trên GitHub `PTIT_CNTT1_IT209_Demo_Final`, quan sát tiế
 docker ps
 docker logs restapi_backend --tail 50
 ```
-- **Kết quả đạt được**: Container `restapi_backend` đang chạy (`Up`), log báo Tomcat started on port 8080.
+- **Kết quả đạt được**: Container `restapi_backend` đang chạy (`Up`), log báo Spring Boot đã sẵn sàng nhận request trên port 8080.
 
 #### Bước 4.3.4: Gọi API kiểm chứng tính năng bằng `curl`
 > 💻 **VỊ TRÍ THỰC HIỆN**: **Trên Terminal máy cá nhân (hoặc trên VPS đều được)**
@@ -679,10 +620,11 @@ docker logs restapi_backend --tail 50
 # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay IP 221.121.4.132, port 8080 và endpoint theo đề bài
 curl -X GET http://221.121.4.132:8080/api/employees/count
 ```
-- **Kết quả ban đầu khi DB chưa có nhân viên**: `0`
+- **Kết quả ban đầu**: `0`
 
 Chèn thử 1 bản ghi vào MySQL trên VPS:
 ```bash
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi mật khẩu, tên database, tên bảng và các cột tương ứng
 docker exec -it restapi_mysql mysql -uroot -p'1234$' -e "USE db_cntt3_api_ss4; INSERT INTO employees (full_name, email, department) VALUES ('Lê Phương Linh', 'linh@ptit.edu.vn', 'CNTT1');"
 ```
 
@@ -706,3 +648,4 @@ curl -X GET http://221.121.4.132:8080/api/employees/count
 | `Permission denied: ./gradlew` trong GitHub Actions | File `gradlew` mất cờ thực thi khi push lên Git từ Windows. | Thêm step `run: chmod +x ./gradlew` trước khi chạy `./gradlew bootJar`. |
 | `Load key "...": error in libcrypto` | SSH Private Key copy vào GitHub Secret bị thiếu dòng header/footer hoặc bị ngắt dòng sai. | Copy chính xác từ `-----BEGIN OPENSSH PRIVATE KEY-----` đến `-----END OPENSSH PRIVATE KEY-----` kèm đầy đủ ký tự xuống dòng. |
 | MySQL lỗi `Access denied for user 'root'@'...'` | Mật khẩu khai báo trong biến môi trường không khớp giữa MySQL và Backend. | Đảm bảo `MYSQL_ROOT_PASSWORD` trong mysql-db bằng chính xác `SPRING_DATASOURCE_PASSWORD` trong backend. |
+| `ports are not available: listen tcp 0.0.0.0:3306: bind` | Cổng 3306 trên máy host đã bị MySQL local chiếm dụng. | Sửa trong `docker-compose.yml` cổng MySQL thành `"3307:3306"`. |
