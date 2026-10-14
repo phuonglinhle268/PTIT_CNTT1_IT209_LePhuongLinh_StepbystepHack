@@ -5,15 +5,15 @@
 > **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`  
 > **Docker Hub Username**: `phuonglinhle`  
 > **Linux Username sinh viên**: `lplinh_k24cntt1`  
-> **Mục tiêu**: Hướng dẫn chi tiết từng câu lệnh, từng bước thao tác, giải thích kỹ thuật, kết quả đầu ra sau mỗi bước, kèm **chú thích ngay bên cạnh code** các vị trí cần thay đổi nếu sang dự án khác.
+> **Mục tiêu**: Hướng dẫn 100% thực hành thực chiến trên **máy ảo VPS mới tinh**, cài đặt từ đầu các công cụ cần thiết (Docker, Compose, Git,...), kèm chú thích đổi dự án ngay bên cạnh code. Không bao gồm các câu hỏi lý thuyết.
 
 ---
 
 ## Chuẩn bị môi trường & Thông tin tham số thực tế
 
-Các tham số sử dụng trong bài:
+Các tham số sử dụng trong toàn bộ bài thi:
 - **Địa chỉ IP VPS**: `221.121.4.132`
-- **User quản trị ban đầu**: `root` hoặc `ubuntu`
+- **User quản trị ban đầu của VPS**: `root`
 - **User sinh viên tạo mới**: `lplinh_k24cntt1`
 - **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`
 - **Tài khoản Docker Hub**: `phuonglinhle`
@@ -23,20 +23,52 @@ Các tham số sử dụng trong bài:
 
 ---
 
+## BƯỚC 0: Khởi tạo & Cài đặt gói công cụ trên VPS mới hoàn toàn
+
+Do máy ảo VPS được cấp là máy mới tinh, bạn cần cài đặt các công cụ nền tảng trước:
+
+### 0.1 Cập nhật hệ thống & cài các tiện ích cơ bản
+Đăng nhập vào VPS với quyền `root`:
+```bash
+ssh root@221.121.4.132
+```
+Chạy cập nhật gói hệ điều hành và cài đặt các công cụ cơ bản (`curl`, `wget`, `git`, `nano`):
+```bash
+apt update && apt upgrade -y
+apt install -y curl wget git nano net-tools ca-certificates gnupg
+```
+- **Kết quả đạt được**: Các gói phần mềm được cài đặt thành công, không báo lỗi mạng hay dependencies.
+
+### 0.2 Cài đặt Docker Engine & Docker Compose chính thức
+Chạy script cài đặt tự động từ Docker:
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+```
+Khởi động và kích hoạt Docker chạy cùng hệ thống:
+```bash
+systemctl enable --now docker
+```
+Kiểm tra phiên bản đã cài đặt:
+```bash
+docker --version
+docker compose version
+```
+- **Kết quả đạt được**:
+  ```text
+  Docker version 27.x.x, build ...
+  Docker Compose version v2.x.x
+  ```
+
+---
+
 ## BÀI 1: Quản trị VPS Linux (2.0 điểm)
 
 > **Quy định bắt buộc**: Tuyệt đối không dùng tài khoản `root` để thao tác git, build source code hay deploy thường ngày.
 
 ### Yêu cầu 1.1 — Kết nối và quản lý tài khoản (0.5 điểm)
 
-#### Bước 1.1.1: Đăng nhập vào VPS qua SSH
-```bash
-ssh root@221.121.4.132
-# Hoặc nếu dùng SSH Key:
-# ssh -i ~/.ssh/my_vps_key root@221.121.4.132
-```
-
-#### Bước 1.1.2: Kiểm tra tài khoản hiện tại
+#### Bước 1.1.1: Kiểm tra tài khoản root ban đầu
 ```bash
 whoami
 id
@@ -47,18 +79,18 @@ id
   uid=0(root) gid=0(root) groups=0(root)
   ```
 
-#### Bước 1.1.3: Tạo tài khoản Linux mới `lplinh_k24cntt1`
+#### Bước 1.1.2: Tạo tài khoản Linux mới `lplinh_k24cntt1`
 ```bash
 adduser lplinh_k24cntt1
 ```
-- Nhập mật khẩu (ví dụ: `Password123@`), các thông tin khác bấm `Enter`, gõ `Y` để xác nhận.
+- Nhập mật khẩu (ví dụ: `Password123@`), xác nhận lại mật khẩu, các thông tin phụ khác nhấn `Enter`, gõ `Y` để xác nhận.
 
-Cấp quyền quản trị `sudo` cho tài khoản mới:
+Cấp quyền quản trị `sudo` cho tài khoản:
 ```bash
 usermod -aG sudo lplinh_k24cntt1
 ```
 
-#### Bước 1.1.4: Chuyển sang tài khoản mới và kiểm tra
+#### Bước 1.1.3: Chuyển sang tài khoản mới và kiểm tra
 ```bash
 su - lplinh_k24cntt1
 whoami
@@ -69,7 +101,7 @@ pwd
   lplinh_k24cntt1
   /home/lplinh_k24cntt1
   ```
-  Dấu nhắc lệnh chuyển thành `lplinh_k24cntt1@Linh-VM3:~$`.
+  Dấu nhắc dòng lệnh chuyển thành: `lplinh_k24cntt1@Linh-VM3:~$`.
 
 ---
 
@@ -81,44 +113,39 @@ id
 ```
 - **Kết quả đạt được**:
   ```text
-  uid=1001(lplinh_k24cntt1) gid=1001(lplinh_k24cntt1) groups=1001(lplinh_k24cntt1),27(sudo)
+  uid=1000(lplinh_k24cntt1) gid=1000(lplinh_k24cntt1) groups=1000(lplinh_k24cntt1),27(sudo)
   ```
 
-#### Bước 1.2.2: Kiểm tra nhóm `docker` có tồn tại trên VPS hay không
+#### Bước 1.2.2: Kiểm tra nhóm `docker`
 ```bash
 getent group docker
-# hoặc: grep docker /etc/group
 ```
-- **Kết quả đạt được**: `docker:x:998:` *(nếu chưa có thì chạy `sudo groupadd docker`)*.
+- **Kết quả đạt được**: Hiển thị thông tin nhóm (ví dụ: `docker:x:998:` hoặc `docker:x:1001:`). Nếu chưa có thì chạy `sudo groupadd docker`.
 
 #### Bước 1.2.3: Bổ sung tài khoản vào nhóm `docker`
 ```bash
 sudo usermod -aG docker lplinh_k24cntt1
 
-# BẮT BUỘC: Nạp lại phiên để quyền nhóm có tác dụng ngay mà không cần logout
+# Áp dụng quyền ngay lập tức trong phiên hiện tại
 newgrp docker
 ```
-Kiểm tra lại:
+Kiểm tra lại bằng lệnh `id`:
 ```bash
 id
 ```
-- **Kết quả đạt được**: Xuất hiện `998(docker)` trong danh sách `groups`.
+- **Kết quả đạt được**: Trong danh sách `groups` xuất hiện `docker`.
 
 #### Bước 1.2.4: Kiểm tra quyền Docker không cần `sudo`
 ```bash
 docker ps
 ```
-- **Kết quả đạt được**: Lệnh chạy bình thường, không báo lỗi permission denied.
-
-#### Bước 1.2.5: Trả lời câu hỏi lý thuyết:
-> **Câu hỏi**: *"Vì sao thành viên nhóm docker có quyền tương đương quyền root trên VPS?"*  
-> **Trả lời**:  
-> Docker Daemon (`dockerd`) chạy dưới quyền `root` và giao tiếp qua Unix socket `/var/run/docker.sock` (thuộc sở hữu nhóm `docker`). Thành viên nhóm `docker` có thể tương tác trực tiếp với Daemon mà không cần `sudo`. Từ đó, người dùng có thể tạo một container mount thư mục gốc của máy chủ (`docker run -v /:/host -it ubuntu bash`) để đọc/ghi mọi file hệ thống (kể cả `/etc/shadow`), tạo user root mới hoặc thay đổi quyền hạn VPS. Do đó quyền nhóm `docker` tương đương quyền root.
+- **Kết quả đạt được**: Hiển thị bảng tiêu đề `CONTAINER ID   IMAGE   COMMAND   CREATED   STATUS   PORTS   NAMES` và không có lỗi permission denied.
 
 ---
 
 ### Yêu cầu 1.3 — Quản lý file và thư mục (1.0 điểm)
 
+Đảm bảo đứng tại thư mục home `/home/lplinh_k24cntt1`:
 ```bash
 cd ~
 pwd
@@ -133,9 +160,9 @@ cd devops-exam
 #### Bước 1.3.2: Tạo file `info.txt`
 ```bash
 cat << 'EOF' > info.txt
-Họ và tên: Sinh Viên DevOps
+Họ và tên: Lê Phương Linh
 Mã sinh viên: CNTT1_IT209
-GitHub Repo: https://github.com/myusername/PTIT_CNTT1_IT209_Demo_Final
+GitHub Repo: https://github.com/phuonglinhle/PTIT_CNTT1_IT209_Demo_Final
 EOF
 ```
 
@@ -146,13 +173,14 @@ ls -l info.txt
 ```
 - **Kết quả đạt được**:
   ```text
-  Họ và tên: Sinh Viên DevOps
+  Họ và tên: Lê Phương Linh
   Mã sinh viên: CNTT1_IT209
-  GitHub Repo: https://github.com/myusername/PTIT_CNTT1_IT209_Demo_Final
+  GitHub Repo: https://github.com/phuonglinhle/PTIT_CNTT1_IT209_Demo_Final
   -rw-rw-r-- 1 lplinh_k24cntt1 lplinh_k24cntt1 112 Oct 14 14:00 info.txt
   ```
 
 #### Bước 1.3.4: Thiết lập và kiểm tra quyền truy cập (`chmod`, `chown`)
+Cấp quyền bảo mật: Chủ sở hữu đọc/ghi (`rw-`), nhóm và người ngoài không có quyền (`---`):
 ```bash
 chmod 600 info.txt
 chown lplinh_k24cntt1:lplinh_k24cntt1 info.txt
@@ -162,7 +190,7 @@ ls -la info.txt
   ```text
   -rw------- 1 lplinh_k24cntt1 lplinh_k24cntt1 112 Oct 14 14:00 info.txt
   ```
-> **Minh chứng Bài 1**: Chụp ảnh màn hình terminal có dấu nhắc lệnh `lplinh_k24cntt1@...`, kết quả `whoami`, `id`, `ls -la info.txt` và nội dung file `info.txt`.
+> **Minh chứng Bài 1**: Chụp ảnh màn hình terminal có dấu nhắc lệnh `lplinh_k24cntt1@...`, kết quả của `whoami`, `id`, `ls -la info.txt` và nội dung file `info.txt`.
 
 ---
 
@@ -320,11 +348,11 @@ git commit -m "feat: initial spring boot project RestAPI_Session04"
 ```
 
 #### Bước 3.1.3: Tạo GitHub Repo và kết nối Remote
-1. Tạo repo mới trên GitHub: `PTIT_CNTT1_IT209_Demo_Final`.
+1. Tạo repo mới trên GitHub cá nhân: `PTIT_CNTT1_IT209_Demo_Final`.
 2. Kết nối và push lên GitHub:
 ```bash
-# -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'myusername' bằng username GitHub của bạn
-git remote add origin https://github.com/myusername/PTIT_CNTT1_IT209_Demo_Final.git
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'phuonglinhle' bằng username GitHub của bạn
+git remote add origin https://github.com/phuonglinhle/PTIT_CNTT1_IT209_Demo_Final.git
 git branch -M main
 git push -u origin main
 ```
@@ -501,7 +529,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ra.demo.service.EmployeeService;
 
 @RestController
-// -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi endpoint theo đề bài yêu cầu
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi endpoint theo đề bài yêu cầu
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor
 public class EmployeeController {
@@ -522,12 +550,13 @@ public class EmployeeController {
 #### Bước 4.2.1: Chuẩn bị SSH Key trên VPS
 Đăng nhập VPS `lplinh_k24cntt1@221.121.4.132` và tạo SSH key:
 ```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
 ssh-keygen -t rsa -b 4096 -C "github-actions-deploy" -f ~/.ssh/id_rsa_deploy -N ""
 cat ~/.ssh/id_rsa_deploy.pub >> ~/.ssh/authorized_keys
-chmod 700 ~/.ssh
 chmod 600 ~/.ssh/authorized_keys
 ```
-Xem và copy Private Key để dán vào GitHub Secret:
+Xem và copy Private Key:
 ```bash
 cat ~/.ssh/id_rsa_deploy
 ```
@@ -539,7 +568,7 @@ Vào Repo `PTIT_CNTT1_IT209_Demo_Final`: **Settings** $\rightarrow$ **Secrets an
 - `DOCKER_PASSWORD`: Token Docker Hub của bạn
 - `VPS_HOST`: `221.121.4.132`
 - `VPS_USER`: **`lplinh_k24cntt1`**
-- `VPS_SSH_KEY`: Nội dung Private Key `id_rsa_deploy`
+- `VPS_SSH_KEY`: Toàn bộ nội dung Private Key `id_rsa_deploy` (kèm header và footer)
 - `VPS_PORT`: `22`
 
 #### Bước 4.2.3: Viết Workflow `.github/workflows/deploy.yml`
@@ -682,6 +711,7 @@ curl -X GET http://221.121.4.132:8080/api/employees/count
 
 | Lỗi gặp phải | Nguyên nhân | Cách khắc phục triệt để |
 | :--- | :--- | :--- |
+| `bash: docker: command not found` | VPS mới chưa được cài đặt Docker. | Chạy lệnh `curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh`. |
 | `permission denied while trying to connect to Docker daemon` | User chưa có quyền trong nhóm `docker` hoặc chưa reload session. | Chạy `sudo usermod -aG docker lplinh_k24cntt1` sau đó gõ lệnh `newgrp docker`. |
 | `Host key verification failed` trong GitHub Actions | SSH Action chưa tin cậy host key của VPS. | Thêm param `fingerprint` hoặc action `appleboy/ssh-action` tự động xử lý khi khai báo đủ host, user và key. |
 | `Communications link failure` khi Spring Boot khởi động | Container MySQL khởi động chậm hơn Spring Boot. | Dùng `healthcheck` trên MySQL và `condition: service_healthy` ở `depends_on` trong `docker-compose.yml`. |
