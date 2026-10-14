@@ -6,7 +6,7 @@
 > **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`  
 > **Docker Hub Username**: `phuonglinhle`  
 > **Linux Username sinh viên**: `lplinh_k24cntt1`  
-> **Mục tiêu**: Hướng dẫn 100% thực hành thực chiến trên **máy ảo VPS mới tinh**, cài đặt từ đầu các công cụ cần thiết (Docker, Compose, Git,...), kèm chú thích đổi dự án ngay bên cạnh code. Không bao gồm các câu hỏi lý thuyết.
+> **Mục tiêu**: Hướng dẫn thực hành có phân định rõ ràng: **🖥️ Lệnh chạy trên Terminal VPS**, **💻 Lệnh chạy trên Terminal máy cá nhân (Local)**, và **🌐 Thao tác trên trình duyệt**.
 
 ---
 
@@ -26,8 +26,7 @@ Các tham số sử dụng trong toàn bộ bài thi:
 ---
 
 ## BƯỚC 0: Khởi tạo & Cài đặt gói công cụ trên VPS mới hoàn toàn
-
-Do máy ảo VPS được cấp là máy mới tinh, bạn cần cài đặt các công cụ nền tảng trước:
+> 🖥️ **VỊ TRÍ THỰC HIỆN**: **Trên Terminal VPS (kết nối SSH bằng quyền root)**
 
 ### 0.1 Cập nhật hệ thống & cài các tiện ích cơ bản
 Đăng nhập vào VPS với quyền `root`:
@@ -65,7 +64,7 @@ docker compose version
 ---
 
 ## BÀI 1: Quản trị VPS Linux (2.0 điểm)
-
+> 🖥️ **VỊ TRÍ THỰC HIỆN**: **100% trên Terminal VPS (SSH: `221.121.4.132`)**  
 > **Quy định bắt buộc**: Tuyệt đối không dùng tài khoản `root` để thao tác git, build source code hay deploy thường ngày.
 
 ### Yêu cầu 1.1 — Kết nối và quản lý tài khoản (0.5 điểm)
@@ -178,7 +177,7 @@ ls -l info.txt
   Họ và tên: Lê Phương Linh
   Mã sinh viên: CNTT1_IT209
   GitHub Repo: https://github.com/phuonglinhle268/PTIT_CNTT1_IT209_Demo_Final
-  -rw-rw-r-- 1 lplinh_k24cntt1 lplinh_k24cntt1 112 Oct 14 14:00 info.txt
+  -rw-rw-r-- 1 lplinh_k24cntt1 docker 134 Oct 14 14:00 info.txt
   ```
 
 #### Bước 1.3.4: Thiết lập và kiểm tra quyền truy cập (`chmod`, `chown`)
@@ -190,17 +189,19 @@ ls -la info.txt
 ```
 - **Kết quả đạt được**:
   ```text
-  -rw------- 1 lplinh_k24cntt1 lplinh_k24cntt1 112 Oct 14 14:00 info.txt
+  -rw------- 1 lplinh_k24cntt1 lplinh_k24cntt1 134 Oct 14 14:00 info.txt
   ```
-> **Minh chứng Bài 1**: Chụp ảnh màn hình terminal có dấu nhắc lệnh `lplinh_k24cntt1@...`, kết quả của `whoami`, `id`, `ls -la info.txt` và nội dung file `info.txt`.
+> **Minh chứng Bài 1**: Chụp ảnh màn hình terminal VPS có dấu nhắc lệnh `lplinh_k24cntt1@...`, kết quả của `whoami`, `id`, `ls -la info.txt` và nội dung file `info.txt`.
 
 ---
 
 ## BÀI 2: Docker trên VPS (2.0 điểm)
+> 💻 **VỊ TRÍ THỰC HIỆN**: **Tạo 2 file dưới đây trên MÁY CÁ NHÂN (LOCAL) trong thư mục gốc của dự án `RestAPI_Session04`**  
+> *(Đường dẫn: `d:\DevOps - RA\RestAPI_Session04\Dockerfile` và `d:\DevOps - RA\RestAPI_Session04\docker-compose.yml`)*
 
 ### Yêu cầu 2.1 — Hoàn thiện Dockerfile (0.75 điểm)
+> 💻 **Tạo file `Dockerfile` trong thư mục `RestAPI_Session04` trên máy local:**
 
-Tạo file `Dockerfile` ngay tại thư mục gốc của project:
 ```dockerfile
 # Base image JRE Alpine gọn nhẹ, bảo mật
 # -> ĐỔI NẾU KHÁC DỰ ÁN: Java 21 dùng 'eclipse-temurin:21-jre-alpine', Java 11 dùng 'eclipse-temurin:11-jre-alpine'
@@ -226,8 +227,8 @@ ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 ---
 
 ### Yêu cầu 2.2 — Hoàn thiện Docker Compose (0.75 điểm)
+> 💻 **Tạo file `docker-compose.yml` trong thư mục `RestAPI_Session04` trên máy local:**
 
-Tạo file `docker-compose.yml`:
 ```yaml
 services:
   # ------------------------------------------------------------
@@ -293,50 +294,22 @@ networks:
 
 ---
 
-### Yêu cầu 2.3 — Khởi chạy và kiểm tra Docker (0.5 điểm)
+### Yêu cầu 2.3 — Kiểm tra Docker (0.5 điểm)
 
-#### Bước 2.3.1: Build file JAR và khởi chạy Docker Compose
-```bash
-# Cấp quyền thực thi và build JAR
-# -> ĐỔI NẾU KHÁC DỰ ÁN: Với Maven thì dùng './mvnw clean package -DskipTests'
-chmod +x ./gradlew
-./gradlew bootJar -x test
-
-# Khởi động dịch vụ ở chế độ chạy ngầm
-docker compose up -d --build
-```
-
-#### Bước 2.3.2: Kiểm tra trạng thái các container
-```bash
-docker compose ps
-# Hoặc: docker ps
-```
-- **Kết quả đạt được**: Cả 2 container đều `Up`, container `mysql-db` ở trạng thái `(healthy)`.
-
-#### Bước 2.3.3: Xem danh sách Image
-```bash
-docker images
-```
-- **Kết quả đạt được**: Thấy image `phuonglinhle/ptit-demo-final:latest` và `mysql:8.0`.
-
-#### Bước 2.3.4: Xem Logs của Backend để xác nhận kết nối Database thành công
-```bash
-docker logs restapi_backend -f
-```
-- **Kết quả đạt được**: Dòng log cuối cùng thể hiện:
-  ```text
-  Started RestApiSession04Application in 4.123 seconds
-  Tomcat started on port 8080 (http) with context path '/'
-  ```
-  Nhấn `Ctrl + C` để thoát xem log.
+> [!IMPORTANT]
+> **LƯU Ý CỰC KỲ QUAN TRỌNG VỀ VỊ TRÍ CHẠY LỆNH NÀY**:
+> - Nếu máy tính cá nhân của bạn **có cài Docker Desktop**: Bạn có thể mở terminal local tại thư mục `RestAPI_Session04` để chạy `./gradlew bootJar` và `docker compose up -d` test thử tại chỗ.
+> - **Nếu máy cá nhân KHÔNG cài Docker Desktop**: Bạn **KHÔNG CẦN** chạy bước này trên máy cá nhân! Hãy làm tiếp **Bài 3** (push code) và **Bài 4** (CI/CD). Hệ thống GitHub Actions sẽ tự động build file JAR và tự động triển khai chạy lên VPS cho bạn. Khi đó, trên VPS bạn chỉ cần gõ `docker ps` và `docker logs restapi_backend` là có ngay minh chứng!
 
 ---
 
 ## BÀI 3: Git & GitHub (1.5 điểm)
+> 💻 **VỊ TRÍ THỰC HIỆN**: **100% trên Terminal MÁY CÁ NHÂN (LOCAL)**  
+> *(Mở Terminal / PowerShell / Git Bash tại thư mục `d:\DevOps - RA\RestAPI_Session04`)*
 
 ### Yêu cầu 3.1 — Tạo Repository (0.5 điểm)
 
-#### Bước 3.1.1: Khởi tạo Git cục bộ trong thư mục source code
+#### Bước 3.1.1: Khởi tạo Git cục bộ trong thư mục source code (trên máy local)
 ```bash
 git init
 git checkout -b main
@@ -350,8 +323,8 @@ git commit -m "feat: initial spring boot project RestAPI_Session04"
 ```
 
 #### Bước 3.1.3: Tạo GitHub Repo và kết nối Remote
-1. Tạo repo mới trên GitHub cá nhân: `PTIT_CNTT1_IT209_Demo_Final`.
-2. Kết nối và push lên GitHub:
+1. 🌐 Mở trình duyệt, vào [GitHub](https://github.com/new), tạo repo mới: `PTIT_CNTT1_IT209_Demo_Final`
+2. 💻 Quay lại terminal máy local, kết nối và push lên GitHub:
 ```bash
 # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'phuonglinhle268' bằng username GitHub của bạn
 git remote add origin https://github.com/phuonglinhle268/PTIT_CNTT1_IT209_Demo_Final.git
@@ -363,10 +336,10 @@ git push -u origin main
 ---
 
 ### Yêu cầu 3.2 — Commit và phát triển chức năng (0.5 điểm)
+> 💻 **VỊ TRÍ THỰC HIỆN**: **Trên Terminal máy local**
 
 #### Bước 3.2.1: Tạo nhánh `feature/employee-count`
 ```bash
-# -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi tên nhánh theo yêu cầu đề (ví dụ feature/product-count)
 git checkout -b feature/employee-count
 ```
 
@@ -382,6 +355,7 @@ git push -u origin feature/employee-count
 ---
 
 ### Yêu cầu 3.3 — Xử lý Conflict (0.5 điểm)
+> 💻 **VỊ TRÍ THỰC HIỆN**: **Trên Terminal máy local**
 
 #### Bước 3.3.1: Tạo thay đổi trên nhánh `main`
 ```bash
@@ -412,7 +386,7 @@ git merge feature/employee-count
   ```
 
 #### Bước 3.3.4: Giải quyết Conflict
-Mở file `README.md`, xóa các ký hiệu `<<<<<<<`, `=======`, `>>>>>>>` và sửa lại thành:
+Mở file `README.md` trong VS Code, xóa các ký hiệu `<<<<<<<`, `=======`, `>>>>>>>` và sửa lại thành:
 ```markdown
 Phiên bản hệ thống: Version 1.1.0 Production (Included Employee Counter)
 ```
@@ -436,15 +410,16 @@ git log --oneline --graph --all
   |/  
   * 1f2e3d4 feat: initial spring boot project RestAPI_Session04
   ```
-> **Minh chứng Bài 3**: Chụp ảnh màn hình terminal lệnh `git log --oneline --graph --all` có đầy đủ các nhánh rẽ và điểm hợp nhất.
+> **Minh chứng Bài 3**: Chụp ảnh màn hình terminal local hiển thị đồ thị rẽ nhánh và điểm merge của lệnh `git log --oneline --graph --all`.
 
 ---
 
 ## BÀI 4: Phát triển Chức năng & Triển khai CI/CD (4.5 điểm)
 
 ### Yêu cầu 4.1 — Phát triển API mới (1.0 điểm)
+> 💻 **VỊ TRÍ THỰC HIỆN**: **Code trên máy cá nhân (LOCAL) trong project `RestAPI_Session04`**
 
-> **Lưu ý**: Nếu đề bài yêu cầu đếm đối tượng khác (ví dụ `Product` có sẵn trong RestAPI_Session04), chỉ cần viết thêm `count()` trong `ProductRepository` và `@GetMapping("/count")` trong `ProductController`. Còn dưới đây là code thêm mới đối tượng `Employee`:
+Tạo 4 file Java theo cấu trúc dự án:
 
 #### 1. Entity `Employee.java` (`src/main/java/ra/demo/model/entity/Employee.java`):
 ```java
@@ -550,7 +525,8 @@ public class EmployeeController {
 ### Yêu cầu 4.2 — Xây dựng GitHub Actions CI/CD (1.5 điểm)
 
 #### Bước 4.2.1: Chuẩn bị SSH Key trên VPS
-Đăng nhập VPS `lplinh_k24cntt1@221.121.4.132` và tạo SSH key:
+> 🖥️ **VỊ TRÍ THỰC HIỆN**: **Trên Terminal VPS (user `lplinh_k24cntt1@221.121.4.132`)**
+
 ```bash
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
@@ -558,23 +534,27 @@ ssh-keygen -t rsa -b 4096 -C "github-actions-deploy" -f ~/.ssh/id_rsa_deploy -N 
 cat ~/.ssh/id_rsa_deploy.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
 ```
-Xem và copy Private Key:
+Xem và copy toàn bộ Private Key:
 ```bash
 cat ~/.ssh/id_rsa_deploy
 ```
 
 #### Bước 4.2.2: Cấu hình GitHub Actions Secrets
+> 🌐 **VỊ TRÍ THỰC HIỆN**: **Trên Trình duyệt Web (GitHub)**
+
 Vào Repo `PTIT_CNTT1_IT209_Demo_Final`: **Settings** $\rightarrow$ **Secrets and variables** $\rightarrow$ **Actions** $\rightarrow$ **New repository secret**:
 
 - `DOCKER_USERNAME`: **`phuonglinhle`**
 - `DOCKER_PASSWORD`: Token Docker Hub của bạn
 - `VPS_HOST`: `221.121.4.132`
 - `VPS_USER`: **`lplinh_k24cntt1`**
-- `VPS_SSH_KEY`: Toàn bộ nội dung Private Key `id_rsa_deploy` (kèm header và footer)
+- `VPS_SSH_KEY`: Dán toàn bộ Private Key `id_rsa_deploy` vừa copy ở Bước 4.2.1
 - `VPS_PORT`: `22`
 
 #### Bước 4.2.3: Viết Workflow `.github/workflows/deploy.yml`
-Tạo file `.github/workflows/deploy.yml`:
+> 💻 **VỊ TRÍ THỰC HIỆN**: **Tạo file trên máy cá nhân (LOCAL) trong thư mục `RestAPI_Session04`**
+
+Tạo file đường dẫn: `RestAPI_Session04/.github/workflows/deploy.yml`:
 
 ```yaml
 name: CI/CD Pipeline - PTIT RestAPI Demo
@@ -670,6 +650,8 @@ jobs:
 ### Yêu cầu 4.3 — Triển khai và kiểm chứng (1.5 điểm)
 
 #### Bước 4.3.1: Commit và Push mã nguồn kích hoạt Pipeline
+> 💻 **VỊ TRÍ THỰC HIỆN**: **Trên Terminal máy cá nhân (LOCAL)**
+
 ```bash
 git add .
 git commit -m "feat: implement employee count API and complete automated CI/CD pipeline"
@@ -677,27 +659,31 @@ git push origin main
 ```
 
 #### Bước 4.3.2: Kiểm tra trạng thái trên GitHub Actions
-Vào tab **Actions** trên GitHub `PTIT_CNTT1_IT209_Demo_Final`, xác nhận cả 2 job `build-and-test` và `deploy-to-vps` đều hiện tích xanh ✅.
+> 🌐 **VỊ TRÍ THỰC HIỆN**: **Trên Trình duyệt Web (tab Actions của Repo GitHub)**
+
+Vào tab **Actions** trên GitHub `PTIT_CNTT1_IT209_Demo_Final`, quan sát tiến trình: Cả 2 job `build-and-test` và `deploy-to-vps` đều hiện tích xanh ✅.
 
 #### Bước 4.3.3: Kiểm chứng trực tiếp trên VPS
-Đăng nhập VPS `lplinh_k24cntt1@221.121.4.132`:
+> 🖥️ **VỊ TRÍ THỰC HIỆN**: **Trên Terminal VPS (`lplinh_k24cntt1@221.121.4.132`)**
+
 ```bash
 docker ps
 docker logs restapi_backend --tail 50
 ```
-- **Kết quả đạt được**: Container `restapi_backend` đang chạy (`Up`), log báo Spring Boot đã sẵn sàng nhận request trên port 8080.
+- **Kết quả đạt được**: Container `restapi_backend` đang chạy (`Up`), log báo Tomcat started on port 8080.
 
 #### Bước 4.3.4: Gọi API kiểm chứng tính năng bằng `curl`
+> 💻 **VỊ TRÍ THỰC HIỆN**: **Trên Terminal máy cá nhân (hoặc trên VPS đều được)**
+
 ```bash
 # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay IP 221.121.4.132, port 8080 và endpoint theo đề bài
 curl -X GET http://221.121.4.132:8080/api/employees/count
 ```
-- **Kết quả mong đợi ban đầu**: `0`
+- **Kết quả ban đầu khi DB chưa có nhân viên**: `0`
 
-Thêm thử 1 bản ghi vào MySQL trên VPS:
+Chèn thử 1 bản ghi vào MySQL trên VPS:
 ```bash
-# -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi mật khẩu, tên database, tên bảng và các cột tương ứng
-docker exec -it restapi_mysql mysql -uroot -p'1234$' -e "USE db_cntt3_api_ss4; INSERT INTO employees (full_name, email, department) VALUES ('Nguyen Van A', 'a@ptit.edu.vn', 'CNTT1');"
+docker exec -it restapi_mysql mysql -uroot -p'1234$' -e "USE db_cntt3_api_ss4; INSERT INTO employees (full_name, email, department) VALUES ('Lê Phương Linh', 'linh@ptit.edu.vn', 'CNTT1');"
 ```
 
 Gọi lại lệnh `curl`:
@@ -705,7 +691,7 @@ Gọi lại lệnh `curl`:
 curl -X GET http://221.121.4.132:8080/api/employees/count
 ```
 - **Kết quả đạt được**: `1`
-> **Minh chứng Bài 4**: Chụp ảnh tab GitHub Actions xanh 100% kèm ảnh chụp terminal chạy lệnh `curl http://221.121.4.132:8080/api/employees/count` trả về số lượng chính xác.
+> **Minh chứng Bài 4**: Chụp ảnh tab GitHub Actions xanh 100% kèm ảnh chụp terminal chạy lệnh `curl http://221.121.4.132:8080/api/employees/count` trả về `1`.
 
 ---
 
