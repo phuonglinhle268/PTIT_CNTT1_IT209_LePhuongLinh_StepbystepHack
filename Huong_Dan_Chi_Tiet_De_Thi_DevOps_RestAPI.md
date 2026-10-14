@@ -1,12 +1,14 @@
 # HƯỚNG DẪN CHI TIẾT THỰC HIỆN ĐỀ THI THỰC HÀNH DEVOPS
 ## Ứng dụng: Spring Boot (Java 17, Gradle) & MySQL
 > **Dự án thực hành minh họa**: `RestAPI_Session04`  
-> **Mục tiêu**: Hướng dẫn chi tiết từng câu lệnh, từng bước thao tác, giải thích kỹ thuật và **kết quả đầu ra đạt được sau mỗi bước** để đạt trọn vẹn 10.0 điểm.
+> **Địa chỉ IP VPS thực tế**: `221.121.4.132`  
+> **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`  
+> **Mục tiêu**: Hướng dẫn chi tiết từng câu lệnh, từng bước thao tác, giải thích kỹ thuật, kết quả đầu ra sau mỗi bước, kèm **chú thích ngay bên cạnh code** các vị trí cần thay đổi nếu sang dự án khác.
 
 ---
 
 ## MỤC LỤC
-1. [Chuẩn bị môi trường & Thông tin giả định](#chuẩn-bị-môi-trường--thông-tin-giả-định)
+1. [Chuẩn bị môi trường & Thông tin tham số thực tế](#chuẩn-bị-môi-trường--thông-tin-tham-số-thực-tế)
 2. [BÀI 1: Quản trị VPS Linux (2.0 điểm)](#bài-1-quản-trị-vps-linux-20-điểm)
    - [Yêu cầu 1.1: Kết nối & Quản lý tài khoản (0.5 điểm)](#yêu-cầu-11--kết-nối-và-quản-lý-tài-khoản-05-điểm)
    - [Yêu cầu 1.2: Quản lý nhóm & Quyền Docker (0.5 điểm)](#yêu-cầu-12--quản-lý-nhóm-và-quyền-05-điểm)
@@ -27,18 +29,17 @@
 
 ---
 
-## Chuẩn bị môi trường & Thông tin giả định
+## Chuẩn bị môi trường & Thông tin tham số thực tế
 
-Trong suốt bài hướng dẫn này, các tham số sau được quy ước làm ví dụ (hãy thay thế bằng thông tin thực tế của bạn khi làm bài):
-- **IP VPS**: `103.179.189.150` (hoặc IP VPS do trường cấp)
+Các tham số sử dụng trong bài:
+- **Địa chỉ IP VPS**: `221.121.4.132`
 - **User quản trị ban đầu**: `root` hoặc `ubuntu`
 - **User sinh viên tạo mới**: `devops_student`
-- **Mã sinh viên**: `B21DCCN001`
-- **Tên GitHub Repository**: `devops-exam-B21DCCN001`
-- **Tài khoản Docker Hub**: `mydevopsuser`
-- **Tên Docker Image**: `mydevopsuser/restapi-session04:latest`
+- **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`
+- **Tài khoản Docker Hub**: `mydevopsuser` *(thay bằng username Docker Hub của bạn)*
+- **Tên Docker Image**: `mydevopsuser/ptit-demo-final:latest`
 - **Cổng Backend ứng dụng**: `8080`
-- **Cổng MySQL trên host (nếu public)**: `3306`
+- **Cổng MySQL trên host**: `3306`
 
 ---
 
@@ -49,15 +50,13 @@ Trong suốt bài hướng dẫn này, các tham số sau được quy ước l�
 ### Yêu cầu 1.1 — Kết nối và quản lý tài khoản (0.5 điểm)
 
 #### Bước 1.1.1: Đăng nhập vào VPS qua SSH
-Mở Terminal trên máy tính (PowerShell, Git Bash hoặc Terminal Linux/macOS) và thực hiện kết nối:
 ```bash
-ssh root@103.179.189.150
-# Hoặc nếu dùng SSH Key có sẵn:
-# ssh -i ~/.ssh/my_vps_key root@103.179.189.150
+ssh root@221.121.4.132
+# Hoặc nếu dùng SSH Key:
+# ssh -i ~/.ssh/my_vps_key root@221.121.4.132
 ```
 
 #### Bước 1.1.2: Kiểm tra tài khoản hiện tại
-Sau khi vào VPS, chạy lệnh kiểm tra danh tính:
 ```bash
 whoami
 id
@@ -67,17 +66,14 @@ id
   root
   uid=0(root) gid=0(root) groups=0(root)
   ```
-  *(Thể hiện bạn đang đứng ở quyền root ban đầu)*.
 
 #### Bước 1.1.3: Tạo tài khoản Linux mới `devops_student`
-Sử dụng lệnh `adduser` (lệnh này tự động tạo home directory và yêu cầu thiết lập mật khẩu):
 ```bash
 adduser devops_student
 ```
-- Hệ thống sẽ yêu cầu nhập mật khẩu (ví dụ: `Password123@`) và xác nhận lại mật khẩu.
-- Các thông tin `Full Name`, `Room Number`,... nhấn `Enter` để bỏ qua, gõ `Y` để xác nhận.
+- Nhập mật khẩu (ví dụ: `Password123@`), các thông tin khác bấm `Enter`, gõ `Y` để xác nhận.
 
-Cấp quyền thực thi lệnh quản trị (`sudo`) cho tài khoản mới:
+Cấp quyền quản trị `sudo` cho tài khoản mới:
 ```bash
 usermod -aG sudo devops_student
 ```
@@ -93,7 +89,7 @@ pwd
   devops_student
   /home/devops_student
   ```
-  Prompt dòng lệnh chuyển thành dạng `devops_student@vps:~$`.
+  Dấu nhắc lệnh chuyển thành `devops_student@...:~$`.
 
 ---
 
@@ -111,48 +107,38 @@ id
 #### Bước 1.2.2: Kiểm tra nhóm `docker` có tồn tại trên VPS hay không
 ```bash
 getent group docker
-# hoặc:
-grep docker /etc/group
+# hoặc: grep docker /etc/group
 ```
-- **Kết quả đạt được**:
-  ```text
-  docker:x:998:
-  ```
-  *(Nếu chưa có nhóm docker, chạy lệnh: `sudo groupadd docker`)*.
+- **Kết quả đạt được**: `docker:x:998:` *(nếu chưa có thì chạy `sudo groupadd docker`)*.
 
 #### Bước 1.2.3: Bổ sung tài khoản vào nhóm `docker`
 ```bash
 sudo usermod -aG docker devops_student
-```
-> **LƯU Ý CỰC KỲ QUAN TRỌNG**: Sau khi thêm user vào group, quyền chưa có hiệu lực ngay trong phiên làm việc hiện tại. Bạn phải áp dụng ngay bằng lệnh:
-```bash
+
+# BẮT BUỘC: Nạp lại phiên để quyền nhóm có tác dụng ngay mà không cần logout
 newgrp docker
 ```
-Kiểm tra lại bằng `id`:
+Kiểm tra lại:
 ```bash
 id
 ```
-- **Kết quả đạt được**: Xuất hiện `docker` trong danh sách `groups`:
-  ```text
-  uid=1001(devops_student) gid=1001(devops_student) groups=1001(devops_student),27(sudo),998(docker)
-  ```
+- **Kết quả đạt được**: Xuất hiện `998(docker)` trong danh sách `groups`.
 
 #### Bước 1.2.4: Kiểm tra quyền Docker không cần `sudo`
 ```bash
 docker ps
 ```
-- **Kết quả đạt được**: Lệnh chạy trơn tru, không báo lỗi `permission denied while trying to connect to the Docker daemon socket`.
+- **Kết quả đạt được**: Lệnh chạy bình thường, không báo lỗi permission denied.
 
-#### Bước 1.2.5: Trả lời câu hỏi phỏng vấn/lý thuyết đề thi:
-> **Câu hỏi**: *"Vì sao thành viên nhóm docker có quyền tương đương quyền quản trị rất cao (root) trên VPS?"*  
+#### Bước 1.2.5: Trả lời câu hỏi lý thuyết:
+> **Câu hỏi**: *"Vì sao thành viên nhóm docker có quyền tương đương quyền root trên VPS?"*  
 > **Trả lời**:  
-> Docker Daemon (`dockerd`) chạy mặc định dưới quyền `root` và giao tiếp qua Unix socket `/var/run/docker.sock`. Mặc định Unix socket này thuộc sở hữu của nhóm `docker`. Khi một user được thêm vào nhóm `docker`, user đó có thể gửi lệnh trực tiếp tới Docker Daemon mà không cần `sudo`. Từ đó, user hoàn toàn có thể khởi tạo một container mount toàn bộ thư mục gốc của máy chủ VPS (`docker run -v /:/host -it ubuntu bash`) và tùy ý chỉnh sửa file `/etc/shadow`, tạo user root mới hoặc thay đổi bất kỳ file hệ thống nào của VPS. Do đó, cấp quyền nhóm `docker` tương đương với cấp quyền root.
+> Docker Daemon (`dockerd`) chạy dưới quyền `root` và giao tiếp qua Unix socket `/var/run/docker.sock` (thuộc sở hữu nhóm `docker`). Thành viên nhóm `docker` có thể tương tác trực tiếp với Daemon mà không cần `sudo`. Từ đó, người dùng có thể tạo một container mount thư mục gốc của máy chủ (`docker run -v /:/host -it ubuntu bash`) để đọc/ghi mọi file hệ thống (kể cả `/etc/shadow`), tạo user root mới hoặc thay đổi quyền hạn VPS. Do đó quyền nhóm `docker` tương đương quyền root.
 
 ---
 
 ### Yêu cầu 1.3 — Quản lý file và thư mục (1.0 điểm)
 
-Đảm bảo bạn đang đứng ở thư mục gốc của tài khoản (`/home/devops_student`):
 ```bash
 cd ~
 pwd
@@ -165,12 +151,11 @@ cd devops-exam
 ```
 
 #### Bước 1.3.2: Tạo file `info.txt`
-Sử dụng `nano` hoặc lệnh chuyển hướng dòng `cat`:
 ```bash
 cat << 'EOF' > info.txt
-Họ và tên: Nguyễn Văn A
-Mã sinh viên: B21DCCN001
-GitHub Repo: https://github.com/myusername/devops-exam-B21DCCN001
+Họ và tên: Sinh Viên DevOps
+Mã sinh viên: CNTT1_IT209
+GitHub Repo: https://github.com/myusername/PTIT_CNTT1_IT209_Demo_Final
 EOF
 ```
 
@@ -181,14 +166,13 @@ ls -l info.txt
 ```
 - **Kết quả đạt được**:
   ```text
-  Họ và tên: Nguyễn Văn A
-  Mã sinh viên: B21DCCN001
-  GitHub Repo: https://github.com/myusername/devops-exam-B21DCCN001
+  Họ và tên: Sinh Viên DevOps
+  Mã sinh viên: CNTT1_IT209
+  GitHub Repo: https://github.com/myusername/PTIT_CNTT1_IT209_Demo_Final
   -rw-rw-r-- 1 devops_student devops_student 112 Oct 14 14:00 info.txt
   ```
 
 #### Bước 1.3.4: Thiết lập và kiểm tra quyền truy cập (`chmod`, `chown`)
-Giả sử yêu cầu bảo mật: Chỉ cho phép chủ sở hữu đọc/ghi (`rw-`), nhóm và người ngoài không có quyền (`---`) -> Quyền `600`:
 ```bash
 chmod 600 info.txt
 chown devops_student:devops_student info.txt
@@ -198,74 +182,58 @@ ls -la info.txt
   ```text
   -rw------- 1 devops_student devops_student 112 Oct 14 14:00 info.txt
   ```
-> **Minh chứng Bài 1**: Chụp ảnh màn hình hiển thị toàn bộ terminal có dấu nhắc lệnh `devops_student@...`, kết quả của `whoami`, `id`, `ls -la info.txt` và nội dung file `info.txt`.
+> **Minh chứng Bài 1**: Chụp ảnh màn hình terminal có dấu nhắc lệnh `devops_student@...`, kết quả `whoami`, `id`, `ls -la info.txt` và nội dung file `info.txt`.
 
 ---
 
 ## BÀI 2: Docker trên VPS (2.0 điểm)
 
-Ứng dụng Spring Boot của dự án [RestAPI_Session04](file:///d:/DevOps%20-%20RA/RestAPI_Session04) sử dụng **Java 17** và trình build **Gradle**. Ta sẽ hoàn thiện [Dockerfile](file:///d:/DevOps%20-%20RA/RestAPI_Session04/Dockerfile) và [docker-compose.yml](file:///d:/DevOps%20-%20RA/RestAPI_Session04/docker-compose.yml) tối ưu, chuẩn quy chuẩn DevOps.
-
 ### Yêu cầu 2.1 — Hoàn thiện Dockerfile (0.75 điểm)
 
-Có 2 mô hình viết Dockerfile:
-1. **Mô hình CI/CD Build trước (Khuyên dùng theo luồng đề thi)**: Pipeline build ra file `.jar`, Dockerfile chỉ cần đóng gói Runtime (nhẹ, build cực nhanh ~ 10 giây).
-2. **Mô hình Multi-stage Build**: Docker tự build mã nguồn bằng Gradle rồi đóng gói.
-
-Dưới đây là Dockerfile chuẩn mực tối ưu cho `RestAPI_Session04` (dùng base image **Eclipse Temurin 17 JRE** nhẹ và ổn định):
-
-Tạo file `Dockerfile` trong thư mục gốc của project:
+Tạo file `Dockerfile` ngay tại thư mục gốc của project:
 ```dockerfile
-# Sử dụng base image JRE 17 Alpine gọn nhẹ, bảo mật
+# Base image JRE Alpine gọn nhẹ, bảo mật
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Java 21 dùng 'eclipse-temurin:21-jre-alpine', Java 11 dùng 'eclipse-temurin:11-jre-alpine'
 FROM eclipse-temurin:17-jre-alpine
 
-# Thiết lập thư mục làm việc trong container
 WORKDIR /app
 
-# Khai báo argument cho file JAR (mặc định của Gradle nằm trong build/libs/)
+# Khai báo đường dẫn file JAR build ra
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Gradle là 'build/libs/*.jar' | Maven là 'target/*.jar'
 ARG JAR_FILE=build/libs/*.jar
 
-# Copy file jar sau khi đã build vào image
 COPY ${JAR_FILE} app.jar
 
-# Mở cổng 8080 của ứng dụng Spring Boot
+# Cổng lắng nghe của Spring Boot
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi theo server.port trong application.properties (ví dụ 8081, 3000)
 EXPOSE 8080
 
-# Cấu hình biến môi trường JVM tối ưu bộ nhớ container
 ENV JAVA_OPTS="-Xms256m -Xmx512m"
 
-# Lệnh khởi chạy ứng dụng Spring Boot
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 ```
-
-- **Giải thích kỹ thuật**:
-  - `eclipse-temurin:17-jre-alpine`: Phù hợp hoàn hảo với `JavaLanguageVersion.of(17)` trong `build.gradle`.
-  - `build/libs/*.jar`: Đường dẫn đầu ra khi chạy lệnh `./gradlew bootJar`.
-  - `ENTRYPOINT`: Cho phép truyền biến môi trường `JAVA_OPTS` linh hoạt khi chạy container.
 
 ---
 
 ### Yêu cầu 2.2 — Hoàn thiện Docker Compose (0.75 điểm)
 
-Khi chạy ứng dụng Spring Boot cùng MySQL, file `docker-compose.yml` phải giải quyết 3 vấn đề:
-1. **Network**: Backend và MySQL phải cùng chung một mạng để backend gọi MySQL qua tên hostname (ví dụ: `mysql-db`).
-2. **Persistent Volume**: Dữ liệu MySQL không bị mất khi hạ container.
-3. **Environment Override**: Override lại thông số kết nối database trong `application.properties` mà không cần sửa code.
-
 Tạo file `docker-compose.yml`:
 ```yaml
 services:
-  # ------------------------------------
-  # 1. DỊCH VỤ DATABASE: MYSQL 8.0
-  # ------------------------------------
+  # ------------------------------------------------------------
+  # 1. DỊCH VỤ DATABASE
+  # ------------------------------------------------------------
   mysql-db:
+    # -> ĐỔI NẾU KHÁC DỰ ÁN: Nếu dùng PostgreSQL thì đổi thành 'postgres:15-alpine'
     image: mysql:8.0
     container_name: restapi_mysql
     restart: always
     environment:
+      # -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi password và tên database đúng với application.properties của dự án mới
       MYSQL_ROOT_PASSWORD: 1234$
       MYSQL_DATABASE: db_cntt3_api_ss4
     ports:
+      # -> ĐỔI NẾU KHÁC DỰ ÁN: Cổng ngoài host : Cổng container (PostgreSQL là 5432:5432)
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
@@ -277,21 +245,24 @@ services:
       timeout: 5s
       retries: 5
 
-  # ------------------------------------
+  # ------------------------------------------------------------
   # 2. DỊCH VỤ BACKEND: SPRING BOOT
-  # ------------------------------------
+  # ------------------------------------------------------------
   backend:
     build:
       context: .
       dockerfile: Dockerfile
-    image: restapi-session04:latest
+    # -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi tên image theo tên project tương ứng
+    image: ptit-demo-final:latest
     container_name: restapi_backend
     restart: unless-stopped
     ports:
+      # -> ĐỔI NẾU KHÁC DỰ ÁN: Port_Host : Port_Container (ví dụ "8081:8080" nếu host bị trùng port 8080)
       - "8080:8080"
     environment:
-      # Override cấu hình datasource của Spring Boot trỏ về service 'mysql-db'
+      # -> ĐỔI NẾU KHÁC DỰ ÁN: Hostname trỏ vào service 'mysql-db' (không dùng localhost), đổi tên database 'db_cntt3_api_ss4'
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/db_cntt3_api_ss4?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      # -> ĐỔI NẾU KHÁC DỰ ÁN: Username/password khớp với cấu hình ở service mysql-db phía trên
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 1234$
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -301,9 +272,6 @@ services:
     networks:
       - app-network
 
-# ------------------------------------
-# KHAI BÁO VOLUMES & NETWORKS
-# ------------------------------------
 volumes:
   mysql_data:
     driver: local
@@ -313,58 +281,44 @@ networks:
     driver: bridge
 ```
 
-- **Điểm sáng tạo điểm cộng trong bài thi**:
-  - Dùng `healthcheck` trên MySQL và `condition: service_healthy` trên backend: Tránh tình trạng Spring Boot khởi động trước khi MySQL sẵn sàng nhận kết nối, gây lỗi `Communications link failure`.
-  - Override `SPRING_DATASOURCE_URL` trỏ vào `mysql-db:3306` (tên service trong compose) thay vì `localhost`.
-
 ---
 
-### Yêu cầu 2.3 — Kiểm tra Docker (0.5 điểm)
+### Yêu cầu 2.3 — Khởi chạy và kiểm tra Docker (0.5 điểm)
 
 #### Bước 2.3.1: Build file JAR và khởi chạy Docker Compose
-Trước khi chạy compose (nếu test tại chỗ):
 ```bash
-# Cấp quyền thực thi và build JAR (bỏ qua test để build nhanh)
+# Cấp quyền thực thi và build JAR
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Với Maven thì dùng './mvnw clean package -DskipTests'
 chmod +x ./gradlew
 ./gradlew bootJar -x test
 
-# Khởi động dịch vụ ở chế độ chạy ngầm (detached mode)
+# Khởi động dịch vụ ở chế độ chạy ngầm
 docker compose up -d --build
 ```
 
 #### Bước 2.3.2: Kiểm tra trạng thái các container
 ```bash
 docker compose ps
-# Hoặc:
-docker ps
+# Hoặc: docker ps
 ```
-- **Kết quả đạt được**:
-  ```text
-  CONTAINER ID   IMAGE                    COMMAND                  STATUS                    PORTS
-  a1b2c3d4e5f6   restapi-session04:latest "sh -c 'java $JAVA_O…"   Up 45 seconds             0.0.0.0:8080->8080/tcp
-  f6e5d4c3b2a1   mysql:8.0                "docker-entrypoint.s…"   Up About a minute (healthy) 0.0.0.0:3306->3306/tcp
-  ```
-  *(Cả 2 container đều có STATUS là Up, mysql-db ở trạng thái healthy)*.
+- **Kết quả đạt được**: Cả 2 container đều `Up`, container `mysql-db` ở trạng thái `(healthy)`.
 
 #### Bước 2.3.3: Xem danh sách Image
 ```bash
 docker images
 ```
-- **Kết quả đạt được**: Thấy image `restapi-session04:latest` và `mysql:8.0`.
+- **Kết quả đạt được**: Thấy image `ptit-demo-final:latest` và `mysql:8.0`.
 
 #### Bước 2.3.4: Xem Logs của Backend để xác nhận kết nối Database thành công
 ```bash
 docker logs restapi_backend -f
-# hoặc:
-docker compose logs -f backend
 ```
-- **Kết quả đạt được**:
-  Dòng log cuối cùng thể hiện:
+- **Kết quả đạt được**: Dòng log cuối cùng thể hiện:
   ```text
-  Started RestApiSession04Application in 4.123 seconds (process running for 4.891)
+  Started RestApiSession04Application in 4.123 seconds
   Tomcat started on port 8080 (http) with context path '/'
   ```
-  Không xuất hiện ngoại lệ `SQLException` hay crash container. Nhấn `Ctrl + C` để thoát xem log.
+  Nhấn `Ctrl + C` để thoát xem log.
 
 ---
 
@@ -373,60 +327,53 @@ docker compose logs -f backend
 ### Yêu cầu 3.1 — Tạo Repository (0.5 điểm)
 
 #### Bước 3.1.1: Khởi tạo Git cục bộ trong thư mục source code
-Mở terminal tại thư mục dự án `RestAPI_Session04`:
 ```bash
 git init
 git checkout -b main
 ```
 
-#### Bước 3.1.2: Cấu hình `.gitignore` và Commit ban đầu
-Đảm bảo các file rác của build không bị push:
+#### Bước 3.1.2: Commit ban đầu
 ```bash
-# Kiểm tra file .gitignore đã có .gradle, /build, .idea,...
 git status
 git add .
 git commit -m "feat: initial spring boot project RestAPI_Session04"
 ```
 
 #### Bước 3.1.3: Tạo GitHub Repo và kết nối Remote
-1. Truy cập [GitHub](https://github.com/new), tạo repository mới:
-   - **Tên Repo**: `devops-exam-B21DCCN001` (đặt đúng theo mã SV của bạn).
-   - **Chế độ**: Public (hoặc Private theo yêu cầu giám thị).
+1. Tạo repo mới trên GitHub: `PTIT_CNTT1_IT209_Demo_Final`.
 2. Kết nối và push lên GitHub:
 ```bash
-git remote add origin https://github.com/myusername/devops-exam-B21DCCN001.git
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'myusername' bằng username GitHub của bạn
+git remote add origin https://github.com/myusername/PTIT_CNTT1_IT209_Demo_Final.git
 git branch -M main
 git push -u origin main
 ```
-- **Kết quả đạt được**: Source code đã xuất hiện đầy đủ trên GitHub tại nhánh `main`.
+- **Kết quả đạt được**: Toàn bộ mã nguồn đã có mặt trên GitHub tại nhánh `main`.
 
 ---
 
 ### Yêu cầu 3.2 — Commit và phát triển chức năng (0.5 điểm)
 
-#### Bước 3.2.1: Tạo và chuyển sang nhánh `feature/employee-count`
+#### Bước 3.2.1: Tạo nhánh `feature/employee-count`
 ```bash
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi tên nhánh theo yêu cầu đề (ví dụ feature/product-count)
 git checkout -b feature/employee-count
 ```
 
-#### Bước 3.2.2: Thực hiện chỉnh sửa mã nguồn
-(Ví dụ: Bạn tạo file hoặc chỉnh sửa ghi chú trong `README.md` hoặc code trực tiếp chức năng đếm nhân viên):
+#### Bước 3.2.2: Chỉnh sửa và commit
 ```bash
 echo "Tính năng đếm nhân viên đang được phát triển" >> README.md
 git add README.md
 git commit -m "feat(employee): add employee count feature documentation"
 git push -u origin feature/employee-count
 ```
-- **Kết quả đạt được**: Nhánh `feature/employee-count` được đẩy thành công lên GitHub.
+- **Kết quả đạt được**: Nhánh `feature/employee-count` đã xuất hiện trên GitHub.
 
 ---
 
 ### Yêu cầu 3.3 — Xử lý Conflict (0.5 điểm)
 
-Để ăn trọn 0.5 điểm phần này, ta tạo một kịch bản **Merge Conflict có chủ đích** giữa nhánh `main` và `feature/employee-count`:
-
 #### Bước 3.3.1: Tạo thay đổi trên nhánh `main`
-Chuyển về `main` và sửa cùng một dòng trong file `README.md`:
 ```bash
 git checkout main
 echo "Phiên bản hệ thống: Version 1.0.0 Production" >> README.md
@@ -435,7 +382,6 @@ git commit -m "chore: update system version on main"
 ```
 
 #### Bước 3.3.2: Tạo thay đổi xung đột trên nhánh `feature/employee-count`
-Chuyển sang nhánh feature và sửa cùng vị trí:
 ```bash
 git checkout feature/employee-count
 echo "Phiên bản hệ thống: Version 1.1.0 Beta Employee Counter" >> README.md
@@ -443,7 +389,7 @@ git add README.md
 git commit -m "chore: update system version on feature branch"
 ```
 
-#### Bước 3.3.3: Thực hiện Merge vào `main` và đón nhận Conflict
+#### Bước 3.3.3: Merge vào `main` và đón nhận Conflict
 ```bash
 git checkout main
 git merge feature/employee-count
@@ -456,19 +402,10 @@ git merge feature/employee-count
   ```
 
 #### Bước 3.3.4: Giải quyết Conflict
-Mở file `README.md`, Git sẽ đánh dấu xung đột dạng:
-```markdown
-<<<<<<< HEAD
-Phiên bản hệ thống: Version 1.0.0 Production
-=======
-Phiên bản hệ thống: Version 1.1.0 Beta Employee Counter
->>>>>>> feature/employee-count
-```
-Chỉnh sửa lại file để giữ nội dung mong muốn (ví dụ kết hợp cả hai hoặc giữ bản hoàn thiện):
+Mở file `README.md`, xóa các ký hiệu `<<<<<<<`, `=======`, `>>>>>>>` và sửa lại thành:
 ```markdown
 Phiên bản hệ thống: Version 1.1.0 Production (Included Employee Counter)
 ```
-
 Lưu file và hoàn tất merge:
 ```bash
 git add README.md
@@ -489,22 +426,17 @@ git log --oneline --graph --all
   |/  
   * 1f2e3d4 feat: initial spring boot project RestAPI_Session04
   ```
-> **Minh chứng Bài 3**: Chụp ảnh màn hình terminal hiển thị kết quả lệnh `git log --oneline --graph --all` có đầy đủ các nhánh rẽ và điểm hợp nhất (merge commit).
+> **Minh chứng Bài 3**: Chụp ảnh màn hình terminal lệnh `git log --oneline --graph --all` có đầy đủ các nhánh rẽ và điểm hợp nhất.
 
 ---
 
 ## BÀI 4: Phát triển Chức năng & Triển khai CI/CD (4.5 điểm)
 
 ### Yêu cầu 4.1 — Phát triển API mới (1.0 điểm)
-**Đề bài yêu cầu**:
-- Method: `GET`
-- Endpoint: `/api/employees/count`
-- Dữ liệu trả về: Số lượng nhân viên hiện có (kiểu số nguyên / JSON, ví dụ: nếu có 5 nhân viên thì trả về số `5`).
 
-Dưới đây là mã nguồn chuẩn theo kiến trúc Spring Boot (Entity $\rightarrow$ Repository $\rightarrow$ Service $\rightarrow$ Controller):
+> **Lưu ý**: Nếu đề bài yêu cầu đếm đối tượng khác (ví dụ `Product` có sẵn trong RestAPI_Session04), chỉ cần viết thêm `count()` trong `ProductRepository` và `@GetMapping("/count")` trong `ProductController`. Còn dưới đây là code thêm mới đối tượng `Employee`:
 
-#### 1. Entity `Employee.java`
-Tạo tại `src/main/java/ra/demo/model/entity/Employee.java`:
+#### 1. Entity `Employee.java` (`src/main/java/ra/demo/model/entity/Employee.java`):
 ```java
 package ra.demo.model.entity;
 
@@ -533,8 +465,7 @@ public class Employee {
 }
 ```
 
-#### 2. Repository `EmployeeRepository.java`
-Tạo tại `src/main/java/ra/demo/repository/EmployeeRepository.java`:
+#### 2. Repository `EmployeeRepository.java` (`src/main/java/ra/demo/repository/EmployeeRepository.java`):
 ```java
 package ra.demo.repository;
 
@@ -544,12 +475,11 @@ import ra.demo.model.entity.Employee;
 
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
-    // JpaRepository đã có sẵn phương thức long count();
 }
 ```
 
-#### 3. Service Interface & Impl
-Tạo interface `src/main/java/ra/demo/service/EmployeeService.java`:
+#### 3. Service Interface & Impl:
+Interface `src/main/java/ra/demo/service/EmployeeService.java`:
 ```java
 package ra.demo.service;
 
@@ -558,7 +488,7 @@ public interface EmployeeService {
 }
 ```
 
-Tạo class triển khai `src/main/java/ra/demo/service/impl/EmployeeServiceImpl.java`:
+Class `src/main/java/ra/demo/service/impl/EmployeeServiceImpl.java`:
 ```java
 package ra.demo.service.impl;
 
@@ -579,8 +509,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 }
 ```
 
-#### 4. Controller `EmployeeController.java`
-Tạo tại `src/main/java/ra/demo/controller/EmployeeController.java`:
+#### 4. Controller `EmployeeController.java` (`src/main/java/ra/demo/controller/EmployeeController.java`):
 ```java
 package ra.demo.controller;
 
@@ -592,6 +521,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ra.demo.service.EmployeeService;
 
 @RestController
+// -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi endpoint theo đề bài yêu cầu
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor
 public class EmployeeController {
@@ -605,98 +535,91 @@ public class EmployeeController {
 }
 ```
 
-> *(Ghi chú bổ sung: Nếu trong đề thi cho phép dùng entity `Product` có sẵn trong RestAPI_Session04, bạn chỉ cần thêm endpoint `@GetMapping("/count")` trong `ProductController` trả về `productRepository.count()`, nguyên lý hoàn toàn tương đương)*.
-
 ---
 
 ### Yêu cầu 4.2 — Xây dựng GitHub Actions CI/CD (1.5 điểm)
 
-#### Bước 4.2.1: Chuẩn bị SSH Key để GitHub Actions kết nối vào VPS
-Trên VPS hoặc máy tính của bạn, tạo một cặp khóa SSH dành riêng cho CI/CD:
+#### Bước 4.2.1: Chuẩn bị SSH Key trên VPS
+Đăng nhập VPS `devops_student@221.121.4.132` và tạo SSH key:
 ```bash
 ssh-keygen -t rsa -b 4096 -C "github-actions-deploy" -f ~/.ssh/id_rsa_deploy -N ""
+cat ~/.ssh/id_rsa_deploy.pub >> ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
 ```
-- Đưa Public Key vào danh sách cho phép đăng nhập của user `devops_student` trên VPS:
-```bash
-cat ~/.ssh/id_rsa_deploy.pub >> /home/devops_student/.ssh/authorized_keys
-chmod 700 /home/devops_student/.ssh
-chmod 600 /home/devops_student/.ssh/authorized_keys
-chown -R devops_student:devops_student /home/devops_student/.ssh
-```
-- Lấy Private Key để cấu hình GitHub Secrets:
+Xem và copy Private Key để dán vào GitHub Secret:
 ```bash
 cat ~/.ssh/id_rsa_deploy
 ```
-*(Copy toàn bộ nội dung từ `-----BEGIN OPENSSH PRIVATE KEY-----` đến `-----END OPENSSH PRIVATE KEY-----`)*.
 
 #### Bước 4.2.2: Cấu hình GitHub Actions Secrets
-Vào GitHub Repository: **Settings** $\rightarrow$ **Secrets and variables** $\rightarrow$ **Actions** $\rightarrow$ **New repository secret**. Thêm 5 secrets sau:
+Vào Repo `PTIT_CNTT1_IT209_Demo_Final`: **Settings** $\rightarrow$ **Secrets and variables** $\rightarrow$ **Actions** $\rightarrow$ **New repository secret**:
 
-| Tên Secret | Giá trị |
-| :--- | :--- |
-| `DOCKER_USERNAME` | Username đăng nhập Docker Hub (ví dụ: `mydevopsuser`) |
-| `DOCKER_PASSWORD` | Docker Hub Access Token (tạo tại Docker Hub > Account Settings > Security) |
-| `VPS_HOST` | Địa chỉ IP của VPS (ví dụ: `103.179.189.150`) |
-| `VPS_USER` | `devops_student` |
-| `VPS_SSH_KEY` | Nội dung Private Key đã copy ở bước trên |
-| `VPS_PORT` | `22` (cổng SSH) |
+- `DOCKER_USERNAME`: Username Docker Hub của bạn
+- `DOCKER_PASSWORD`: Token Docker Hub
+- `VPS_HOST`: `221.121.4.132`
+- `VPS_USER`: `devops_student`
+- `VPS_SSH_KEY`: Nội dung Private Key `id_rsa_deploy`
+- `VPS_PORT`: `22`
 
 #### Bước 4.2.3: Viết Workflow `.github/workflows/deploy.yml`
-Tạo file `.github/workflows/deploy.yml` trong mã nguồn dự án:
+Tạo file `.github/workflows/deploy.yml`:
 
 ```yaml
-name: CI/CD Pipeline - RestAPI Spring Boot
+name: CI/CD Pipeline - PTIT RestAPI Demo
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  # ==========================================
-  # GIAI ĐOẠN 1: BUILD & TEST (CI)
-  # ==========================================
+  # ============================================================
+  # GIAI ĐOẠN 1: BUILD & PUSH IMAGE (CI)
+  # ============================================================
   build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: 1. Checkout mã nguồn
         uses: actions/checkout@v4
 
-      - name: 2. Thiết lập JDK 17
+      - name: 2. Thiết lập JDK
         uses: actions/setup-java@v4
         with:
+          # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay '17' bằng '21' hoặc '11' tùy phiên bản Java của dự án
           java-version: '17'
           distribution: 'temurin'
+          # -> ĐỔI NẾU KHÁC DỰ ÁN: Dùng 'gradle' hoặc 'maven' tùy công cụ build
           cache: gradle
 
-      - name: 3. Cấp quyền thực thi cho Gradle Wrapper
-        run: chmod +x ./gradlew
+      - name: 3. Cấp quyền & Build ứng dụng (JAR)
+        # -> ĐỔI NẾU KHÁC DỰ ÁN: Nếu là Maven đổi thành: chmod +x ./mvnw && ./mvnw clean package -DskipTests
+        run: |
+          chmod +x ./gradlew
+          ./gradlew bootJar -x test
 
-      - name: 4. Build ứng dụng Spring Boot (JAR)
-        # Bỏ qua test nếu chưa có DB trên GitHub runner để tránh fail pipeline
-        run: ./gradlew bootJar -x test
-
-      - name: 5. Đăng nhập Docker Hub
+      - name: 4. Đăng nhập Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: 6. Build và Push Docker Image
+      - name: 5. Build và Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/restapi-session04:latest
+          # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'ptit-demo-final' bằng tên repo image của dự án mới
+          tags: ${{ secrets.DOCKER_USERNAME }}/ptit-demo-final:latest
 
-  # ==========================================
+  # ============================================================
   # GIAI ĐOẠN 2: DEPLOY LÊN VPS (CD)
-  # ==========================================
+  # ============================================================
   deploy-to-vps:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
-      - name: 1. Checkout repository để lấy file docker-compose.yml
+      - name: 1. Checkout repository
         uses: actions/checkout@v4
 
       - name: 2. Copy docker-compose.yml sang VPS
@@ -707,6 +630,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           source: "docker-compose.yml"
+          # -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi thư mục đích trên VPS nếu có quy định khác
           target: "/home/${{ secrets.VPS_USER }}/devops-exam/"
 
       - name: 3. SSH vào VPS và triển khai phiên bản mới
@@ -719,18 +643,14 @@ jobs:
           script: |
             cd /home/${{ secrets.VPS_USER }}/devops-exam/
             
-            # Cập nhật image mới nhất từ Docker Hub trong file docker-compose nếu cần
-            # Pull image mới về VPS
-            docker pull ${{ secrets.DOCKER_USERNAME }}/restapi-session04:latest
+            # -> ĐỔI NẾU KHÁC DỰ ÁN: Thay 'ptit-demo-final' bằng tên image mới
+            docker pull ${{ secrets.DOCKER_USERNAME }}/ptit-demo-final:latest
             
-            # Khởi động lại container backend với image mới
+            # Restart backend container với image vừa kéo
             docker compose down backend || true
             docker compose up -d
             
-            # Dọn dẹp các images không còn sử dụng (dangling images)
             docker image prune -f
-            
-            # Hiển thị trạng thái các container sau khi deploy
             docker ps
 ```
 
@@ -741,51 +661,40 @@ jobs:
 #### Bước 4.3.1: Commit và Push mã nguồn kích hoạt Pipeline
 ```bash
 git add .
-git commit -m "feat: implement /api/employees/count and setup complete CI/CD workflow"
+git commit -m "feat: implement employee count API and complete automated CI/CD pipeline"
 git push origin main
 ```
 
 #### Bước 4.3.2: Kiểm tra trạng thái trên GitHub Actions
-1. Truy cập tab **Actions** trên GitHub repository.
-2. Quan sát workflow `CI/CD Pipeline - RestAPI Spring Boot` đang chạy.
-3. Khi cả 2 job `build-and-test` và `deploy-to-vps` đều hiện tích xanh ✅:
-   - File JAR đã build thành công.
-   - Image đã được đẩy lên Docker Hub: `mydevopsuser/restapi-session04:latest`.
-   - VPS đã kéo image và khởi động lại container backend.
+Vào tab **Actions** trên GitHub `PTIT_CNTT1_IT209_Demo_Final`, xác nhận cả 2 job `build-and-test` và `deploy-to-vps` đều hiện tích xanh ✅.
 
 #### Bước 4.3.3: Kiểm chứng trực tiếp trên VPS
-Đăng nhập vào VPS với user `devops_student`:
+Đăng nhập VPS `devops_student@221.121.4.132`:
 ```bash
 docker ps
 docker logs restapi_backend --tail 50
 ```
-- **Kết quả đạt được**: Container đang chạy (`Up`), log hiển thị Spring Boot đã khởi động thành công trên port 8080.
+- **Kết quả đạt được**: Container `restapi_backend` đang chạy (`Up`), log báo Spring Boot đã sẵn sàng nhận request trên port 8080.
 
 #### Bước 4.3.4: Gọi API kiểm chứng tính năng bằng `curl`
-Chạy lệnh `curl` từ máy tính cá nhân hoặc ngay trên terminal VPS:
 ```bash
-curl -X GET http://103.179.189.150:8080/api/employees/count
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Thay IP 221.121.4.132, port 8080 và endpoint theo đề bài
+curl -X GET http://221.121.4.132:8080/api/employees/count
 ```
-- **Kết quả mong đợi trả về**:
-  ```text
-  0
-  ```
-  *(Số 0 biểu thị cơ sở dữ liệu mới khởi tạo chưa có nhân viên nào)*.
+- **Kết quả mong đợi ban đầu**: `0`
 
-Thêm thử 1 bản ghi vào MySQL trên VPS để kiểm tra:
+Thêm thử 1 bản ghi vào MySQL trên VPS:
 ```bash
-docker exec -it restapi_mysql mysql -uroot -p'1234$' -e "USE db_cntt3_api_ss4; INSERT INTO employees (full_name, email, department) VALUES ('Nguyen Van A', 'a@gmail.com', 'IT');"
+# -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi mật khẩu, tên database, tên bảng và các cột tương ứng
+docker exec -it restapi_mysql mysql -uroot -p'1234$' -e "USE db_cntt3_api_ss4; INSERT INTO employees (full_name, email, department) VALUES ('Nguyen Van A', 'a@ptit.edu.vn', 'CNTT1');"
 ```
 
 Gọi lại lệnh `curl`:
 ```bash
-curl -X GET http://103.179.189.150:8080/api/employees/count
+curl -X GET http://221.121.4.132:8080/api/employees/count
 ```
-- **Kết quả đạt được**:
-  ```text
-  1
-  ```
-> **Minh chứng Bài 4**: Chụp ảnh tab GitHub Actions xanh 100% kèm ảnh chụp terminal chạy lệnh `curl http://...:8080/api/employees/count` trả về kết quả số lượng nhân viên chính xác.
+- **Kết quả đạt được**: `1`
+> **Minh chứng Bài 4**: Chụp ảnh tab GitHub Actions xanh 100% kèm ảnh chụp terminal chạy lệnh `curl http://221.121.4.132:8080/api/employees/count` trả về số lượng chính xác.
 
 ---
 
