@@ -4,6 +4,7 @@
 > **Địa chỉ IP VPS thực tế**: `221.121.4.132`  
 > **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`  
 > **Docker Hub Username**: `phuonglinhle`  
+> **Linux Username sinh viên**: `lplinh_k24cntt1`  
 > **Mục tiêu**: Hướng dẫn chi tiết từng câu lệnh, từng bước thao tác, giải thích kỹ thuật, kết quả đầu ra sau mỗi bước, kèm **chú thích ngay bên cạnh code** các vị trí cần thay đổi nếu sang dự án khác.
 
 ---
@@ -13,7 +14,7 @@
 Các tham số sử dụng trong bài:
 - **Địa chỉ IP VPS**: `221.121.4.132`
 - **User quản trị ban đầu**: `root` hoặc `ubuntu`
-- **User sinh viên tạo mới**: `devops_student`
+- **User sinh viên tạo mới**: `lplinh_k24cntt1`
 - **Tên GitHub Repository**: `PTIT_CNTT1_IT209_Demo_Final`
 - **Tài khoản Docker Hub**: `phuonglinhle`
 - **Tên Docker Image**: `phuonglinhle/ptit-demo-final:latest`
@@ -46,29 +47,29 @@ id
   uid=0(root) gid=0(root) groups=0(root)
   ```
 
-#### Bước 1.1.3: Tạo tài khoản Linux mới `devops_student`
+#### Bước 1.1.3: Tạo tài khoản Linux mới `lplinh_k24cntt1`
 ```bash
-adduser devops_student
+adduser lplinh_k24cntt1
 ```
 - Nhập mật khẩu (ví dụ: `Password123@`), các thông tin khác bấm `Enter`, gõ `Y` để xác nhận.
 
 Cấp quyền quản trị `sudo` cho tài khoản mới:
 ```bash
-usermod -aG sudo devops_student
+usermod -aG sudo lplinh_k24cntt1
 ```
 
 #### Bước 1.1.4: Chuyển sang tài khoản mới và kiểm tra
 ```bash
-su - devops_student
+su - lplinh_k24cntt1
 whoami
 pwd
 ```
 - **Kết quả đạt được**:
   ```text
-  devops_student
-  /home/devops_student
+  lplinh_k24cntt1
+  /home/lplinh_k24cntt1
   ```
-  Dấu nhắc lệnh chuyển thành `devops_student@...:~$`.
+  Dấu nhắc lệnh chuyển thành `lplinh_k24cntt1@Linh-VM3:~$`.
 
 ---
 
@@ -80,7 +81,7 @@ id
 ```
 - **Kết quả đạt được**:
   ```text
-  uid=1001(devops_student) gid=1001(devops_student) groups=1001(devops_student),27(sudo)
+  uid=1001(lplinh_k24cntt1) gid=1001(lplinh_k24cntt1) groups=1001(lplinh_k24cntt1),27(sudo)
   ```
 
 #### Bước 1.2.2: Kiểm tra nhóm `docker` có tồn tại trên VPS hay không
@@ -92,7 +93,7 @@ getent group docker
 
 #### Bước 1.2.3: Bổ sung tài khoản vào nhóm `docker`
 ```bash
-sudo usermod -aG docker devops_student
+sudo usermod -aG docker lplinh_k24cntt1
 
 # BẮT BUỘC: Nạp lại phiên để quyền nhóm có tác dụng ngay mà không cần logout
 newgrp docker
@@ -148,20 +149,20 @@ ls -l info.txt
   Họ và tên: Sinh Viên DevOps
   Mã sinh viên: CNTT1_IT209
   GitHub Repo: https://github.com/myusername/PTIT_CNTT1_IT209_Demo_Final
-  -rw-rw-r-- 1 devops_student devops_student 112 Oct 14 14:00 info.txt
+  -rw-rw-r-- 1 lplinh_k24cntt1 lplinh_k24cntt1 112 Oct 14 14:00 info.txt
   ```
 
 #### Bước 1.3.4: Thiết lập và kiểm tra quyền truy cập (`chmod`, `chown`)
 ```bash
 chmod 600 info.txt
-chown devops_student:devops_student info.txt
+chown lplinh_k24cntt1:lplinh_k24cntt1 info.txt
 ls -la info.txt
 ```
 - **Kết quả đạt được**:
   ```text
-  -rw------- 1 devops_student devops_student 112 Oct 14 14:00 info.txt
+  -rw------- 1 lplinh_k24cntt1 lplinh_k24cntt1 112 Oct 14 14:00 info.txt
   ```
-> **Minh chứng Bài 1**: Chụp ảnh màn hình terminal có dấu nhắc lệnh `devops_student@...`, kết quả `whoami`, `id`, `ls -la info.txt` và nội dung file `info.txt`.
+> **Minh chứng Bài 1**: Chụp ảnh màn hình terminal có dấu nhắc lệnh `lplinh_k24cntt1@...`, kết quả `whoami`, `id`, `ls -la info.txt` và nội dung file `info.txt`.
 
 ---
 
@@ -519,7 +520,7 @@ public class EmployeeController {
 ### Yêu cầu 4.2 — Xây dựng GitHub Actions CI/CD (1.5 điểm)
 
 #### Bước 4.2.1: Chuẩn bị SSH Key trên VPS
-Đăng nhập VPS `devops_student@221.121.4.132` và tạo SSH key:
+Đăng nhập VPS `lplinh_k24cntt1@221.121.4.132` và tạo SSH key:
 ```bash
 ssh-keygen -t rsa -b 4096 -C "github-actions-deploy" -f ~/.ssh/id_rsa_deploy -N ""
 cat ~/.ssh/id_rsa_deploy.pub >> ~/.ssh/authorized_keys
@@ -537,7 +538,7 @@ Vào Repo `PTIT_CNTT1_IT209_Demo_Final`: **Settings** $\rightarrow$ **Secrets an
 - `DOCKER_USERNAME`: **`phuonglinhle`**
 - `DOCKER_PASSWORD`: Token Docker Hub của bạn
 - `VPS_HOST`: `221.121.4.132`
-- `VPS_USER`: `devops_student`
+- `VPS_USER`: **`lplinh_k24cntt1`**
 - `VPS_SSH_KEY`: Nội dung Private Key `id_rsa_deploy`
 - `VPS_PORT`: `22`
 
@@ -609,7 +610,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           source: "docker-compose.yml"
-          # -> ĐỔI NẾU KHÁC DỰ ÁN: Đổi thư mục đích trên VPS nếu có quy định khác
+          # Thư mục đích trên VPS của user lplinh_k24cntt1
           target: "/home/${{ secrets.VPS_USER }}/devops-exam/"
 
       - name: 3. SSH vào VPS và triển khai phiên bản mới
@@ -648,7 +649,7 @@ git push origin main
 Vào tab **Actions** trên GitHub `PTIT_CNTT1_IT209_Demo_Final`, xác nhận cả 2 job `build-and-test` và `deploy-to-vps` đều hiện tích xanh ✅.
 
 #### Bước 4.3.3: Kiểm chứng trực tiếp trên VPS
-Đăng nhập VPS `devops_student@221.121.4.132`:
+Đăng nhập VPS `lplinh_k24cntt1@221.121.4.132`:
 ```bash
 docker ps
 docker logs restapi_backend --tail 50
@@ -681,7 +682,7 @@ curl -X GET http://221.121.4.132:8080/api/employees/count
 
 | Lỗi gặp phải | Nguyên nhân | Cách khắc phục triệt để |
 | :--- | :--- | :--- |
-| `permission denied while trying to connect to Docker daemon` | User chưa có quyền trong nhóm `docker` hoặc chưa reload session. | Chạy `sudo usermod -aG docker devops_student` sau đó gõ lệnh `newgrp docker`. |
+| `permission denied while trying to connect to Docker daemon` | User chưa có quyền trong nhóm `docker` hoặc chưa reload session. | Chạy `sudo usermod -aG docker lplinh_k24cntt1` sau đó gõ lệnh `newgrp docker`. |
 | `Host key verification failed` trong GitHub Actions | SSH Action chưa tin cậy host key của VPS. | Thêm param `fingerprint` hoặc action `appleboy/ssh-action` tự động xử lý khi khai báo đủ host, user và key. |
 | `Communications link failure` khi Spring Boot khởi động | Container MySQL khởi động chậm hơn Spring Boot. | Dùng `healthcheck` trên MySQL và `condition: service_healthy` ở `depends_on` trong `docker-compose.yml`. |
 | `Permission denied: ./gradlew` trong GitHub Actions | File `gradlew` mất cờ thực thi khi push lên Git từ Windows. | Thêm step `run: chmod +x ./gradlew` trước khi chạy `./gradlew bootJar`. |
